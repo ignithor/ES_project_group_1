@@ -7,6 +7,10 @@
 
 
 #include "xc.h"
+#include "pwm.h"
+#include "spi.h"
+#include "timer.h"
+#include "uart.h"
 
 
 // LED alias definitions for clarity in code.
