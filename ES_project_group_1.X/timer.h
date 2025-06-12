@@ -1,5 +1,5 @@
-#ifndef XC_HEADER_TEMPLATE_H
-#define XC_HEADER_TEMPLATE_H
+#ifndef TIMER_H
+#define TIMER_H
 
 #include <xc.h> // Include processor files
 

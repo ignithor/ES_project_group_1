@@ -22,14 +22,24 @@ int main(void) {
 
     // Disable all analog functionality on pins to use them as digital I/O
     ANSELA = ANSELB = ANSELC = ANSELD = ANSELE = ANSELG = 0x0000;
-    
-    LED1 = 1; // LED initially off
+
+    LED1 = 1; // LED initially on
+    int tmr_counter_led = 0;
+
+    // Configure timers
+    tmr_setup_period(TIMER1, 2); // TIMER1: 500Hz main loop timing (2ms)
 
 
     while (1) {
-        LED1 = !LED1;
-        // tmr_wait_period(TIMER1); // Wait for timer period completion
 
+        // If 1000ms waited switch the LED
+        if (tmr_counter_led == 1000) {
+            LED1 = !LED1;
+            tmr_counter_led = 0;
+        }
+
+        tmr_counter_led += 2; // Increment counters by 2ms
+        tmr_wait_period(TIMER1); // Wait for timer period completion
     }
 
     return 0;
