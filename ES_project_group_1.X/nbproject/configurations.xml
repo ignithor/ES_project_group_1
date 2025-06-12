@@ -19,6 +19,12 @@
                    displayName="Source Files"
                    projectFiles="true">
       <itemPath>main.c</itemPath>
+      <itemPath>adc_ex_config.h</itemPath>
+      <itemPath>adc_ex1.c</itemPath>
+      <itemPath>adc_ex2.c</itemPath>
+      <itemPath>pwm.c</itemPath>
+      <itemPath>pwm.h</itemPath>
+      <itemPath>motor_forward.c</itemPath>
     </logicalFolder>
   </logicalFolder>
   <projectmakefile>Makefile</projectmakefile>
