@@ -71,16 +71,16 @@ int main(void) {
 
     while (1) {
 
-        if (rxStringReady) {
-            strcpy(localCopy, (char*) rxBuffer); // Copy safely
-            rxStringReady = 0; // Reset flag AFTER copy
-            rxIndex = 0; // Also reset index here (not inside ISR)
+        // if (rxStringReady) {
+        //     strcpy(localCopy, (char*) rxBuffer); // Copy safely
+        //     rxStringReady = 0; // Reset flag AFTER copy
+        //     rxIndex = 0; // Also reset index here (not inside ISR)
 
-            UART_SendString("You entered: ");
-            UART_SendString(localCopy);
-            UART_SendString("\r\n");
-            process_uart_command(localCopy);
-        }
+        //     UART_SendString("You entered: ");
+        //     UART_SendString(localCopy);
+        //     UART_SendString("\r\n");
+        //     process_uart_command(localCopy);
+        // }
 
 
         // If 1000ms waited switch the LED
