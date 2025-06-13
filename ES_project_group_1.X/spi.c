@@ -1,10 +1,16 @@
 #include "spi.h"
 
 // Global variable definitions for magnetometer sensor data storage
-int x_values[ARRAY_SIZE];  // X-axis magnetometer readings buffer
-int y_values[ARRAY_SIZE];  // Y-axis magnetometer readings buffer
-int z_values[ARRAY_SIZE];  // Z-axis magnetometer readings buffer
-int array_index = 0;       // Current position in circular buffer
+int x_values_mag[ARRAY_SIZE];  // X-axis magnetometer readings buffer
+int y_values_mag[ARRAY_SIZE];  // Y-axis magnetometer readings buffer
+int z_values_mag[ARRAY_SIZE];  // Z-axis magnetometer readings buffer
+int array_index_mag = 0;       // Current position in circular buffer
+
+// Global variable definitions for accelerometer sensor data storage
+int x_values_acc[ARRAY_SIZE];  // X-axis accelerometer readings buffer
+int y_values_acc[ARRAY_SIZE];  // Y-axis accelerometer readings buffer
+int z_values_acc[ARRAY_SIZE];  // Z-axis accelerometer readings buffer
+int array_index_acc = 0;       // Current position in circular buffer
 
 /**
  * @brief Transmits and receives a byte via SPI
@@ -111,27 +117,27 @@ void acquire_magnetometer_data(void) {
     uint8_t x_MSB_byte = spi_write(0x00);    // Read X-MSB register
     // Process X-axis data: 13-bit value with 3 LSBs reserved
     int x_value = ((x_MSB_byte << 8) | (x_LSB_byte & 0xF8)) / 8;
-    x_values[array_index] = x_value;
+    x_values_mag[array_index_mag] = x_value;
     
     // Acquire Y-axis magnetic data
     uint8_t y_LSB_byte = spi_write(0x00);    // Read Y-LSB register
     uint8_t y_MSB_byte = spi_write(0x00);    // Read Y-MSB register
     // Process Y-axis data: 13-bit value with 3 LSBs reserved
     int y_value = ((y_MSB_byte << 8) | (y_LSB_byte & 0xF8)) / 8;
-    y_values[array_index] = y_value;
+    y_values_mag[array_index_mag] = y_value;
     
     // Acquire Z-axis magnetic data
     uint8_t z_LSB_byte = spi_write(0x00);    // Read Z-LSB register
     uint8_t z_MSB_byte = spi_write(0x00);    // Read Z-MSB register
     // Process Z-axis data: 15-bit value with 1 LSB reserved
     int z_value = ((z_MSB_byte << 8) | (z_LSB_byte & 0xFE)) / 2;
-    z_values[array_index] = z_value;
+    z_values_mag[array_index_mag] = z_value;
     
     // End SPI transaction
     LATDbits.LATD6 = 1;                      // Disable chip select
     
     // Update circular buffer index for next reading
-    array_index = (array_index + 1) % ARRAY_SIZE;
+    array_index_mag = (array_index_mag + 1) % ARRAY_SIZE;
 }
 
 void accelerometer_config(void) {
@@ -163,27 +169,27 @@ void acquire_accelerometer_data(void) {
     uint8_t x_MSB_byte = spi_write(0x00);    // Read X-MSB register
     // Process X-axis data: 13-bit value, discard lower 3 bits
     int x_value = ((x_MSB_byte << 8) | (x_LSB_byte & 0xF8)) >> 3;
-    x_values[array_index] = x_value;
+    x_values_acc[array_index_acc] = x_value;
 
     // Acquire Y-axis accelerometer data
     uint8_t y_LSB_byte = spi_write(0x00);    // Read Y-LSB register
     uint8_t y_MSB_byte = spi_write(0x00);    // Read Y-MSB register
     // Process Y-axis data: 13-bit value, discard lower 3 bits
     int y_value = ((y_MSB_byte << 8) | (y_LSB_byte & 0xF8)) >> 3;
-    y_values[array_index] = y_value;
+    y_values_acc[array_index_acc] = y_value;
 
     // Acquire Z-axis accelerometer data
     uint8_t z_LSB_byte = spi_write(0x00);    // Read Z-LSB register
     uint8_t z_MSB_byte = spi_write(0x00);    // Read Z-MSB register
     // Process Z-axis data: 13-bit value, discard lower 3 bits
     int z_value = ((z_MSB_byte << 8) | (z_LSB_byte & 0xF8)) >> 3;
-    z_values[array_index] = z_value;
+    z_values_acc[array_index_acc] = z_value;
 
     // End SPI transaction
     LATDbits.LATD6 = 1;                      // Disable chip select
 
     // Update circular buffer index for next reading
-    array_index = (array_index + 1) % ARRAY_SIZE;
+    array_index_acc = (array_index_acc + 1) % ARRAY_SIZE;
 }
 
 
