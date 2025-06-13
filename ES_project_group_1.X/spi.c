@@ -45,7 +45,7 @@ void spi_setup(void) {
 //    LATDbits.LATD6 = 1;     // Initialize CS high (inactive)
 
     // Configure chip select pins for the accelerometer
-    TRISDbits.TRISD6 = 0;   // CS1: accelerometer set as output
+    TRISBbits.TRISB0 = 0;   // CS1: accelerometer set as output
     LATBbits.LATB0 = 1;     // Initialize CS high (inactive)
 
     
