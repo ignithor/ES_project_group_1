@@ -26,15 +26,15 @@ void __attribute__((__interrupt__, __auto_psv__))_INT1Interrupt(void) {
 
    if (is_pwm_on) {
        LATAbits.LATA0 = 1;
-       drive_forward();
-
+       // Set both motors to move forward at 50% duty cycle
+       set_motor_pwm(PWM_PERIOD/2, PWM_PERIOD/2);
    } else {
        LATAbits.LATA0 = 0;
-       drive_stop();
+       stop_motors();
    }
 
    tmr_setup_period(TIMER2, 20);
-    IEC0bits.T2IE = 1;
+   IEC0bits.T2IE = 1;
 }
 
 // Debouncing using two interrupts
@@ -68,7 +68,8 @@ int main(void) {
    IFS1bits.INT1IF = 0;        // clear the interrupt flag
    IEC1bits.INT1IE = 1;        // enable interrupt
 
-   init_pwm();
+    init_pwm();
+    stop_motors();  // Ensure motors are stopped at startup
 
     // Configure timers
     tmr_setup_period(TIMER1, 2); // TIMER1: 500Hz main loop timing (2ms)
