@@ -12,7 +12,14 @@
 #include "timer.h"
 #include "uart.h"
 
-int is_pwm_on; // Flag - 1: PWM is generated 0: NO
+// State definitions
+#define STATE_WAIT_FOR_START 0
+#define STATE_MOVING         1
+#define STATE_EMERGENCY      2
+
+// State flags
+int current_state;    // Current state of the robot
+int is_pwm_on;       // Flag for PWM generation status
 
 // LED alias definitions for clarity in code.
 #define LED1 LATAbits.LATA0
@@ -22,15 +29,18 @@ void __attribute__((__interrupt__, __auto_psv__))_INT1Interrupt(void) {
    IFS1bits.INT1IF = 0; // clear the interrupt flag
    IEC1bits.INT1IE = 0; // disable interrupt
 
-   is_pwm_on = !is_pwm_on;
-
-   if (is_pwm_on) {
-       LATAbits.LATA0 = 1;
-       // Set both motors to move forward at 50% duty cycle
-       set_motor_pwm(PWM_PERIOD/2, PWM_PERIOD/2);
-   } else {
-       LATAbits.LATA0 = 0;
-       stop_motors();
+   // Only process button press if not in emergency state
+   if (current_state != STATE_EMERGENCY) {
+       if (current_state == STATE_WAIT_FOR_START) {
+           // Transition to Moving state
+           current_state = STATE_MOVING;
+           // Set both motors to move forward at 50% duty cycle
+           set_motor_pwm(PWM_PERIOD/2, PWM_PERIOD/2);
+       } else if (current_state == STATE_MOVING) {
+           // Transition back to Wait for Start state
+           current_state = STATE_WAIT_FOR_START;
+           stop_motors();
+       }
    }
 
    tmr_setup_period(TIMER2, 20);
@@ -56,17 +66,19 @@ int main(void) {
     LED1 = 1; // LED initially on
     int tmr_counter_led = 0;
 
-    is_pwm_on = 0; // Flag - 1: PWM ON, 0: OFF
+    // Initialize states
+    current_state = STATE_WAIT_FOR_START;
+    is_pwm_on = 0;
 
     // Set pin as input
-   TRISEbits.TRISE8 = 1; // T2 button set as input
-   TRISEbits.TRISE9 = 1; // T3 button set as input
+    TRISEbits.TRISE8 = 1; // T2 button set as input
+    TRISEbits.TRISE9 = 1; // T3 button set as input
 
-   /*Enable interrupts in INT1*/
-   RPINR0bits.INT1R = 0x58;    //RPI88 in hex (88)
-   INTCON2bits.GIE = 1;        // set global interrupt enable
-   IFS1bits.INT1IF = 0;        // clear the interrupt flag
-   IEC1bits.INT1IE = 1;        // enable interrupt
+    /*Enable interrupts in INT1*/
+    RPINR0bits.INT1R = 0x58;    //RPI88 in hex (88)
+    INTCON2bits.GIE = 1;        // set global interrupt enable
+    IFS1bits.INT1IF = 0;        // clear the interrupt flag
+    IEC1bits.INT1IE = 1;        // enable interrupt
 
     init_pwm();
     stop_motors();  // Ensure motors are stopped at startup
