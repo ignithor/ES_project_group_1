@@ -47,6 +47,9 @@ void magnetometer_config(void);
  */
 void acquire_magnetometer_data(void);
 
+void accelerometer_config(void);
+void acquire_accelerometer_data(void);
+
 /**
  * @brief Calculate the average of an array of integer values.
  * 

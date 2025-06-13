@@ -37,6 +37,11 @@ void spi_setup(void) {
     // Configure chip select pins for the magnetometer
     TRISDbits.TRISD6 = 0;   // CS3: Magnetometer set as output
     LATDbits.LATD6 = 1;     // Initialize CS high (inactive)
+
+    // Configure chip select pins for the accelerometer
+    TRISDbits.TRISD7 = 0;   // CS1: accelerometer set as output
+    LATDbits.LATD7 = 1;     // Initialize CS high (inactive)
+
     
     // Configure SPI data and clock pins
     TRISAbits.TRISA1 = 1;   // RA1-RPI17 MISO (input)
@@ -86,7 +91,6 @@ void magnetometer_config(void) {
     LATDbits.LATD6 = 1;          // Disable chip select
     tmr_setup_period(TIMER2, 2);     //setup timer 2 to be 2 ms
     tmr_wait_period(TIMER2);      // Wait 2ms for settings to apply
-    
 }
 
 /**
@@ -129,6 +133,59 @@ void acquire_magnetometer_data(void) {
     // Update circular buffer index for next reading
     array_index = (array_index + 1) % ARRAY_SIZE;
 }
+
+void accelerometer_config(void) {
+    // Step 1: Power on the accelerometer (exit suspend mode)
+    LATDbits.LATD7 = 0;          // Enable chip select for accelerometer
+    spi_write(0x11);             // PMU_LPW register (power mode config)
+    spi_write(0x00);             // Normal mode 
+    LATDbits.LATD7 = 1;          // Disable chip select
+    tmr_setup_period(TIMER2, 2);
+    tmr_wait_period(TIMER2);     // Wait 2ms
+
+    // Step 2: Set data rate and bandwidth (e.g., 10Hz, filtered)
+    LATDbits.LATD7 = 0;          // Enable chip select
+    spi_write(0x10);             // PMU_BW register (bandwidth and ODR)
+    spi_write(0x08);             // 100Hz ODR, 32Hz bandwidth (0x08)
+    LATDbits.LATD7 = 1;          // Disable chip select
+    tmr_setup_period(TIMER2, 2);
+    tmr_wait_period(TIMER2);     // Wait 2ms
+}
+
+void acquire_accelerometer_data(void) {
+    // Begin SPI transaction and select accelerometer register for reading
+    LATDbits.LATD6 = 0;                      // Enable chip select (assumed for accelerometer)
+    int first_addr = 0x02;                   // First data register address for accelerometer
+    spi_write(first_addr | 0x80);            // Set MSB for read operation (read + auto-increment)
+
+    // Acquire X-axis accelerometer data
+    uint8_t x_LSB_byte = spi_write(0x00);    // Read X-LSB register
+    uint8_t x_MSB_byte = spi_write(0x00);    // Read X-MSB register
+    // Process X-axis data: 13-bit value, discard lower 3 bits
+    int x_value = ((x_MSB_byte << 8) | (x_LSB_byte & 0xF8)) >> 3;
+    x_values[array_index] = x_value;
+
+    // Acquire Y-axis accelerometer data
+    uint8_t y_LSB_byte = spi_write(0x00);    // Read Y-LSB register
+    uint8_t y_MSB_byte = spi_write(0x00);    // Read Y-MSB register
+    // Process Y-axis data: 13-bit value, discard lower 3 bits
+    int y_value = ((y_MSB_byte << 8) | (y_LSB_byte & 0xF8)) >> 3;
+    y_values[array_index] = y_value;
+
+    // Acquire Z-axis accelerometer data
+    uint8_t z_LSB_byte = spi_write(0x00);    // Read Z-LSB register
+    uint8_t z_MSB_byte = spi_write(0x00);    // Read Z-MSB register
+    // Process Z-axis data: 13-bit value, discard lower 3 bits
+    int z_value = ((z_MSB_byte << 8) | (z_LSB_byte & 0xF8)) >> 3;
+    z_values[array_index] = z_value;
+
+    // End SPI transaction
+    LATDbits.LATD6 = 1;                      // Disable chip select
+
+    // Update circular buffer index for next reading
+    array_index = (array_index + 1) % ARRAY_SIZE;
+}
+
 
 /**
  * @brief Calculates the average of an array of integer values
