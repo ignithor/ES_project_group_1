@@ -9,9 +9,9 @@
 
 // Extern declarations for magnetometer data buffers. These arrays store the most recent
 // measurements for the x, y, and z axes respectively.
-extern int x_values[ARRAY_SIZE];
-extern int y_values[ARRAY_SIZE];
-extern int z_values[ARRAY_SIZE];
+extern int x_values_acc[ARRAY_SIZE];
+extern int y_values_acc[ARRAY_SIZE];
+extern int z_values_acc[ARRAY_SIZE];
 
 // Global index used for circular buffer management for magnetometer data
 extern int array_index;
@@ -38,14 +38,14 @@ int spi_write(int addr);
  * 
  * Sets the magnetometer to active mode and configures the data rate to 25Hz.
  */
-void magnetometer_config(void);
+//void magnetometer_config(void);
 
 /**
  * @brief Acquire data from the magnetometer.
  * 
  * Reads magnetic data from the sensor registers and stores them in the corresponding buffers.
  */
-void acquire_magnetometer_data(void);
+//void acquire_magnetometer_data(void);
 
 void accelerometer_config(void);
 void acquire_accelerometer_data(void);
