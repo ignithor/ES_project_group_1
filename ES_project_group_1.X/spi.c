@@ -160,7 +160,7 @@ void accelerometer_config(void) {
 
 void acquire_accelerometer_data(void) {
     // Begin SPI transaction and select accelerometer register for reading
-    LATDbits.LATD6 = 0;                      // Enable chip select (assumed for accelerometer)
+    LATDbits.LATD7 = 0;                      // Enable chip select (assumed for accelerometer)
     int first_addr = 0x02;                   // First data register address for accelerometer
     spi_write(first_addr | 0x80);            // Set MSB for read operation (read + auto-increment)
 
@@ -186,7 +186,7 @@ void acquire_accelerometer_data(void) {
     z_values_acc[array_index_acc] = z_value;
 
     // End SPI transaction
-    LATDbits.LATD6 = 1;                      // Disable chip select
+    LATDbits.LATD7 = 1;                      // Disable chip select
 
     // Update circular buffer index for next reading
     array_index_acc = (array_index_acc + 1) % ARRAY_SIZE;
