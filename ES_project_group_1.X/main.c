@@ -13,6 +13,14 @@
 #include "uart.h"
 #include "adc.h"
 
+// State definitions
+#define STATE_WAIT_FOR_START 0
+#define STATE_MOVING         1
+#define STATE_EMERGENCY      2
+
+// State flags
+int current_state;    // Current state of the robot
+
 
 // LED alias definitions for clarity in code.
 #define LED1 LATAbits.LATA0
@@ -39,6 +47,8 @@ int main(void) {
 
     LED1 = 1; // LED initially on
     int tmr_counter_led = 0;
+    int tmr_counter_side_leds = 0;
+    int tmr_counter_emergency = 0;
 
     // Initialize state
     TURN_L = 0;
@@ -53,8 +63,6 @@ int main(void) {
         // If 1000ms waited switch the LED
         if (tmr_counter_led == 500) {
             LED1 = !LED1;
-            TURN_L = !TURN_L;
-            TURN_R = !TURN_R;
             tmr_counter_led = 0;
         }
         // Read ADC: Manual sampling & Automatic conversion
@@ -68,11 +76,35 @@ int main(void) {
 
         // For testing
         if (distance < 0.3) {
-            LATGbits.LATG9 = 1;
+            LATGbits.LATG9 = 1; // DEBUG
+            tmr_counter_emergency = 0; // Reset emergency counter
+            current_state = STATE_EMERGENCY;
+            if (tmr_counter_side_leds == 500) {
+                TURN_L = !TURN_L;
+                TURN_R = !TURN_R;
+                tmr_counter_side_leds = 0; // Reset side LED counter
+            }
+            // TODO: Stop motors
+            // TODO: send a msg on UART : $MEMRG,1*
         } else {
             LATGbits.LATG9 = 0;
+            if (current_state == STATE_EMERGENCY) {
+                tmr_counter_emergency += 2; // Increment emergency counter by 2ms
+                if (tmr_counter_emergency == 5000) { // If 5000ms passed in emergency state
+                    current_state = STATE_WAIT_FOR_START; // Reset to wait for start state
+                    tmr_counter_emergency = 0; // Reset emergency counter
+                    TURN_L = 0; // Turn off left turn signal
+                    TURN_R = 0; // Turn off right turn signal
+                    tmr_counter_side_leds = 0; // Reset side LED counter
+                    // TODO: send a msg on UART : $MEMRG,0*
+                }
+
+            }
         }
 
+        if (current_state == STATE_EMERGENCY){
+            tmr_counter_side_leds += 2; // Increment side LED counter by 2ms
+        }
         tmr_counter_led += 2; // Increment counters by 2ms
         tmr_wait_period(TIMER1); // Wait for timer period completion
     }
