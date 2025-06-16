@@ -61,6 +61,7 @@ void acquire_accelerometer_data(void);
  * @param size The number of elements in the array.
  * @return double The computed average.
  */
-double calculate_average(int values[], int size);
+// double calculate_average(int values[], int size);
+int filter_acc(int values[], int size);
 
 #endif // SPI_H

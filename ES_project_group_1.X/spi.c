@@ -141,7 +141,7 @@ void spi_setup(void) {
 //}
 
 void accelerometer_config(void) {
-    // Step 1: Power on the accelerometer (exit suspend mode)
+    // Power on the accelerometer (exit suspend mode)
     ACC_CS = 0;          // Enable chip select for accelerometer
     spi_write(0x11);             // PMU_LPW register (power mode config)
     spi_write(0x00);             // Normal mode 
@@ -149,10 +149,15 @@ void accelerometer_config(void) {
     tmr_setup_period(TIMER2, 2);
     tmr_wait_period(TIMER2);     // Wait 2ms
 
-    // Step 2: Set data rate and bandwidth (e.g., 10Hz, filtered)
+    // Set data rate and bandwidth (e.g., 10Hz, filtered)
     ACC_CS = 0;          // Enable chip select
+
     spi_write(0x10);             // PMU_BW register (bandwidth and ODR)
     spi_write(0x08);             // 100Hz ODR, 32Hz bandwidth (0x08)
+    unsigned int adress_measurement_range = 0x0F; // A measurement range
+    spi_write(adress_measurement_range);
+    spi_write(0x05); // ±4g range (1.95 mg/LSB)
+
     ACC_CS = 1;          // Disable chip select
     tmr_setup_period(TIMER2, 2);
     tmr_wait_period(TIMER2);     // Wait 2ms
@@ -165,22 +170,22 @@ void acquire_accelerometer_data(void) {
     spi_write(first_addr | 0x80);            // Set MSB for read operation (read + auto-increment)
 
     // Acquire X-axis accelerometer data
-    uint8_t x_LSB_byte = spi_write(0x00);    // Read X-LSB register
-    uint8_t x_MSB_byte = spi_write(0x00);    // Read X-MSB register
+    uint8_t x_LSB_byte = spi_write(0x02);    // Read X-LSB register
+    uint8_t x_MSB_byte = spi_write(0x03);    // Read X-MSB register
     // Process X-axis data: 13-bit value, discard lower 3 bits
     int x_value = ((x_MSB_byte << 8) | (x_LSB_byte & 0xF8)) >> 3;
     x_values_acc[array_index_acc] = x_value;
 
     // Acquire Y-axis accelerometer data
-    uint8_t y_LSB_byte = spi_write(0x00);    // Read Y-LSB register
-    uint8_t y_MSB_byte = spi_write(0x00);    // Read Y-MSB register
+    uint8_t y_LSB_byte = spi_write(0x04);    // Read Y-LSB register
+    uint8_t y_MSB_byte = spi_write(0x05);    // Read Y-MSB register
     // Process Y-axis data: 13-bit value, discard lower 3 bits
     int y_value = ((y_MSB_byte << 8) | (y_LSB_byte & 0xF8)) >> 3;
     y_values_acc[array_index_acc] = y_value;
 
     // Acquire Z-axis accelerometer data
-    uint8_t z_LSB_byte = spi_write(0x00);    // Read Z-LSB register
-    uint8_t z_MSB_byte = spi_write(0x00);    // Read Z-MSB register
+    uint8_t z_LSB_byte = spi_write(0x06);    // Read Z-LSB register
+    uint8_t z_MSB_byte = spi_write(0x07);    // Read Z-MSB register
     // Process Z-axis data: 13-bit value, discard lower 3 bits
     int z_value = ((z_MSB_byte << 8) | (z_LSB_byte & 0xF8)) >> 3;
     z_values_acc[array_index_acc] = z_value;
@@ -203,12 +208,17 @@ void acquire_accelerometer_data(void) {
  * @param size Number of elements in the array
  * @return integer of the arithmetic mean of the values
  */
-double calculate_average(int values[], int size) {
+int filter_acc(int values[], int size) {
     int sum = 0;
     // Calculate sum of all values in array
     for(int i=0; i<size; i++) {
         sum += values[i];
     }
+    double raw_average = (double)sum/size;
+
+    // Convert raw average to acceleration in [mg]
+    int acc_in_mg = (int)round(1.95*raw_average);
+
     // Return average value
-    return (int)round(sum/size);
+    return acc_in_mg;
 }
