@@ -14,6 +14,7 @@
 #include "uart.h"
 #include "adc.h"
 
+
 // State definitions
 #define STATE_WAIT_FOR_START 0
 #define STATE_MOVING         1
@@ -26,6 +27,7 @@ int current_state;    // Current state of the robot
 // State flags
 int current_state;    // Current state of the robot
 int is_pwm_on;       // Flag for PWM generation status
+
 
 // LED pin definition.
 #define LED1 LATAbits.LATA0
@@ -48,7 +50,8 @@ int main(void) {
 
     TRISFbits.TRISF1 = 0; // Left LED
     TRISBbits.TRISB8 = 0; // Right LED
-
+    
+    UART_Initialize();
     setup_adc(); // setup IR sensor ADC
 
     // Initialize state
@@ -77,7 +80,6 @@ int main(void) {
     int tmr_counter_side_leds = 0;
     int tmr_counter_emergency = 0;
 
-
     while (1) {
         // Handle LED blinking (1000ms period)
         if (tmr_counter_led == 500) {
@@ -89,6 +91,9 @@ int main(void) {
 
         // For testing
         if (distance < distance_threshold) {
+            if(current_state != STATE_EMERGENCY){
+                UART_SendString("$MEMRG,1*");
+            }
             LATGbits.LATG9 = 1; // DEBUG
             tmr_counter_emergency = 0; // Reset emergency counter
             current_state = STATE_EMERGENCY;
@@ -105,6 +110,8 @@ int main(void) {
                     TURN_R = 0; // Turn off right turn signal
                     tmr_counter_side_leds = 0; // Reset side LED counter
                     // TODO: send a msg on UART : $MEMRG,0*
+                    UART_SendString("$MEMRG,0");
+
                 }
 
             }
