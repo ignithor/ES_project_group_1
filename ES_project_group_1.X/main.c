@@ -7,14 +7,20 @@
 
 
 #include "xc.h"
+#include "interrupt.h"
 #include "pwm.h"
 #include "spi.h"
 #include "timer.h"
 #include "uart.h"
 
 
-// LED alias definitions for clarity in code.
+// State flags
+int current_state;    // Current state of the robot
+int is_pwm_on;       // Flag for PWM generation status
+
+// LED pin definition.
 #define LED1 LATAbits.LATA0
+
 
 int main(void) {
     // Initialize pins
@@ -26,20 +32,33 @@ int main(void) {
     LED1 = 1; // LED initially on
     int tmr_counter_led = 0;
 
-    // Configure timers
-    tmr_setup_period(TIMER1, 2); // TIMER1: 500Hz main loop timing (2ms)
+    // Initialize states
+    current_state = STATE_WAIT_FOR_START;
+    is_pwm_on = 0;
 
+    // Initialize interrupts and states
+    init_interrupts();
+    
+    // Initialize PWM and ensure motors are stopped
+    init_pwm();
+    stop_motors();
+    
+    // Configure system timers
+    tmr_setup_period(TIMER1, 2);  // TIMER1: 500Hz main loop timing (2ms)
+    tmr_setup_period(TIMER2, 20); // TIMER2: Used for button debouncing
 
     while (1) {
-
-        // If 1000ms waited switch the LED
+        // Handle LED blinking (1000ms period)
         if (tmr_counter_led == 1000) {
             LED1 = !LED1;
             tmr_counter_led = 0;
         }
-
-        tmr_counter_led += 2; // Increment counters by 2ms
-        tmr_wait_period(TIMER1); // Wait for timer period completion
+        
+        // Update timing counters
+        tmr_counter_led += 2; // Increment by 2ms
+        
+        // Wait for next timer period
+        tmr_wait_period(TIMER1);
     }
 
     return 0;
