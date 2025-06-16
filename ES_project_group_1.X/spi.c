@@ -46,7 +46,7 @@ void spi_setup(void) {
 
     // Configure chip select pins for the accelerometer
     TRISBbits.TRISB3 = 0;   // CS1: accelerometer set as output
-    LATBbits.LATB3 = 1;     // Initialize CS high (inactive)
+    ACC_CS = 1;     // Initialize CS high (inactive)
 
     
     // Configure SPI data and clock pins
@@ -142,25 +142,25 @@ void spi_setup(void) {
 
 void accelerometer_config(void) {
     // Step 1: Power on the accelerometer (exit suspend mode)
-    LATBbits.LATB3 = 0;          // Enable chip select for accelerometer
+    ACC_CS = 0;          // Enable chip select for accelerometer
     spi_write(0x11);             // PMU_LPW register (power mode config)
     spi_write(0x00);             // Normal mode 
-    LATBbits.LATB3 = 1;          // Disable chip select
+    ACC_CS = 1;          // Disable chip select
     tmr_setup_period(TIMER2, 2);
     tmr_wait_period(TIMER2);     // Wait 2ms
 
     // Step 2: Set data rate and bandwidth (e.g., 10Hz, filtered)
-    LATBbits.LATB3 = 0;          // Enable chip select
+    ACC_CS = 0;          // Enable chip select
     spi_write(0x10);             // PMU_BW register (bandwidth and ODR)
     spi_write(0x08);             // 100Hz ODR, 32Hz bandwidth (0x08)
-    LATBbits.LATB3 = 1;          // Disable chip select
+    ACC_CS = 1;          // Disable chip select
     tmr_setup_period(TIMER2, 2);
     tmr_wait_period(TIMER2);     // Wait 2ms
 }
 
 void acquire_accelerometer_data(void) {
     // Begin SPI transaction and select accelerometer register for reading
-    LATBbits.LATB3 = 0;                      // Enable chip select (assumed for accelerometer)
+    ACC_CS = 0;                      // Enable chip select (assumed for accelerometer)
     int first_addr = 0x02;                   // First data register address for accelerometer
     spi_write(first_addr | 0x80);            // Set MSB for read operation (read + auto-increment)
 
@@ -186,7 +186,7 @@ void acquire_accelerometer_data(void) {
     z_values_acc[array_index_acc] = z_value;
 
     // End SPI transaction
-    LATBbits.LATB3 = 1;                      // Disable chip select
+    ACC_CS = 1;                      // Disable chip select
 
     // Update circular buffer index for next reading
     array_index_acc = (array_index_acc + 1) % ARRAY_SIZE;
@@ -201,7 +201,7 @@ void acquire_accelerometer_data(void) {
  * 
  * @param values Array of integer values to average
  * @param size Number of elements in the array
- * @return double The arithmetic mean of the values
+ * @return integer of the arithmetic mean of the values
  */
 double calculate_average(int values[], int size) {
     int sum = 0;

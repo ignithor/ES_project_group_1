@@ -7,6 +7,7 @@
 
 // Define buffer size for magnetometer data (using the last 5 measurements)
 #define ARRAY_SIZE 5
+#define ACC_CS LATBbits.LATB3
 
 // Extern declarations for magnetometer data buffers. These arrays store the most recent
 // measurements for the x, y, and z axes respectively.
