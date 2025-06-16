@@ -21,13 +21,8 @@
 #define STATE_EMERGENCY      2
 
 // State flags
-int current_state;    // Current state of the robot
-
-
-// State flags
-int current_state;    // Current state of the robot
-int is_pwm_on;       // Flag for PWM generation status
-
+int current_state; // Current state of the robot
+int is_pwm_on; // Flag for PWM generation status
 
 // LED pin definition.
 #define LED1 LATAbits.LATA0
@@ -40,7 +35,6 @@ int is_pwm_on;       // Flag for PWM generation status
 
 int main(void) {
 
-
     // Disable all analog functionality on pins to use them as digital I/O
     ANSELA = ANSELB = ANSELC = ANSELD = ANSELE = ANSELG = 0x0000;
 
@@ -50,7 +44,7 @@ int main(void) {
 
     TRISFbits.TRISF1 = 0; // Left LED
     TRISBbits.TRISB8 = 0; // Right LED
-    
+
     UART_Initialize();
     setup_adc(); // setup IR sensor ADC
 
@@ -67,13 +61,13 @@ int main(void) {
 
     // Initialize interrupts and states
     init_interrupts();
-    
+
     // Initialize PWM and ensure motors are stopped
     init_pwm();
     stop_motors();
-    
+
     // Configure system timers
-    tmr_setup_period(TIMER1, 2);  // TIMER1: 500Hz main loop timing (2ms)
+    tmr_setup_period(TIMER1, 2); // TIMER1: 500Hz main loop timing (2ms)
     tmr_setup_period(TIMER2, 20); // TIMER2: Used for button debouncing
     LED1 = 1; // LED initially on
     int tmr_counter_led = 0;
@@ -89,19 +83,28 @@ int main(void) {
 
         distance = adc_distance(); // Read distance from ADC
 
-        // For testing
-        if (distance < distance_threshold) {
-            if(current_state != STATE_EMERGENCY){
+        if (current_state == STATE_MOVING) {
+            if (distance < distance_threshold) {
                 UART_SendString("$MEMRG,1*");
+                LATGbits.LATG9 = 1; // DEBUG
+                tmr_counter_emergency = 0; // Reset emergency counter
+                current_state = STATE_EMERGENCY;
+                stop_motors();
             }
-            LATGbits.LATG9 = 1; // DEBUG
-            tmr_counter_emergency = 0; // Reset emergency counter
-            current_state = STATE_EMERGENCY;
-            stop_motors();
-            // TODO: send a msg on UART : $MEMRG,1*
-        } else {
-            LATGbits.LATG9 = 0;
-            if (current_state == STATE_EMERGENCY) {
+        }
+
+        if (current_state == STATE_EMERGENCY) {
+            tmr_counter_side_leds += 2; // Increment side LED counter by 2ms
+            if (tmr_counter_side_leds == 500) {
+                TURN_L = !TURN_L;
+                TURN_R = !TURN_R;
+                tmr_counter_side_leds = 0; // Reset side LED counter
+            }
+            if (distance < distance_threshold) {
+                LATGbits.LATG9 = 1; // DEBUG
+                tmr_counter_emergency = 0; // Reset emergency counter
+            } else {
+                LATGbits.LATG9 = 0;
                 tmr_counter_emergency += 2; // Increment emergency counter by 2ms
                 if (tmr_counter_emergency == 5000) { // If 5000ms passed in emergency state
                     current_state = STATE_WAIT_FOR_START; // Reset to wait for start state
@@ -109,26 +112,15 @@ int main(void) {
                     TURN_L = 0; // Turn off left turn signal
                     TURN_R = 0; // Turn off right turn signal
                     tmr_counter_side_leds = 0; // Reset side LED counter
-                    // TODO: send a msg on UART : $MEMRG,0*
                     UART_SendString("$MEMRG,0");
-
                 }
 
             }
         }
 
-        if (current_state == STATE_EMERGENCY){
-        tmr_counter_side_leds += 2; // Increment side LED counter by 2ms
-        if (tmr_counter_side_leds == 500) {
-            TURN_L = !TURN_L;
-            TURN_R = !TURN_R;
-            tmr_counter_side_leds = 0; // Reset side LED counter
-        }
-        }
-        
         // Update timing counters
         tmr_counter_led += 2; // Increment by 2ms
-        
+
         // Wait for next timer period
         tmr_wait_period(TIMER1);
     }
