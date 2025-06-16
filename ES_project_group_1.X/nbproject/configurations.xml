@@ -4,7 +4,6 @@
     <logicalFolder name="HeaderFiles"
                    displayName="Header Files"
                    projectFiles="true">
-      <itemPath>adc_ex_config.h</itemPath>
       <itemPath>pwm.h</itemPath>
       <itemPath>timer.h</itemPath>
       <itemPath>spi.h</itemPath>
@@ -25,17 +24,17 @@
                    displayName="Source Files"
                    projectFiles="true">
       <itemPath>main.c</itemPath>
-      <itemPath>adc_ex1.c</itemPath>
       <itemPath>pwm.c</itemPath>
-      <itemPath>motor_forward.c</itemPath>
       <itemPath>timer.c</itemPath>
       <itemPath>spi.c</itemPath>
       <itemPath>uart.c</itemPath>
-      <itemPath>motor_right.c</itemPath>
-      <itemPath>adc_ex3.c</itemPath>
+      <itemPath>interrupt.c</itemPath>
       <itemPath>adc.c</itemPath>
     </logicalFolder>
   </logicalFolder>
+  <sourceRootList>
+    <Elem>.</Elem>
+  </sourceRootList>
   <projectmakefile>Makefile</projectmakefile>
   <confs>
     <conf name="default" type="2">
