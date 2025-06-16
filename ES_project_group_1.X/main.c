@@ -96,15 +96,15 @@ int main(void) {
         }
         
         // Calculate averages of last 5 measurements once per main loop iteration
-        double x_acc = filter_acc(x_values_acc, ARRAY_SIZE);
-        double y_acc = filter_acc(y_values_acc, ARRAY_SIZE);
-        double z_acc = filter_acc(z_values_acc, ARRAY_SIZE);
+        int x_acc = filter_acc(x_values_acc, ARRAY_SIZE);
+        int y_acc = filter_acc(y_values_acc, ARRAY_SIZE);
+        int z_acc = filter_acc(z_values_acc, ARRAY_SIZE);
 
         // Process and transmit ACC data at configurable rate (xx Hz)
         if (currentRate > 0) {
             uart_period_ms = (1.0 / currentRate)*1000.0;
             if (tmr_counter_uart % uart_period_ms == 0) {
-                sprintf(acc_message, "$MACC,%.2f,%.2f,%.2f*\r\n", x_acc, y_acc, z_acc);
+                sprintf(acc_message, "$MACC,%d,%d,%d*\r\n", x_acc, y_acc, z_acc);
                 UART_SendString(acc_message);
                 tmr_counter_uart = 0;
             }
