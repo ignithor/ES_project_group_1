@@ -92,7 +92,7 @@ int main(void) {
             LATGbits.LATG9 = 1; // DEBUG
             tmr_counter_emergency = 0; // Reset emergency counter
             current_state = STATE_EMERGENCY;
-            // TODO: Stop motors
+            stop_motors();
             // TODO: send a msg on UART : $MEMRG,1*
         } else {
             LATGbits.LATG9 = 0;
