@@ -2,6 +2,7 @@
 #define SPI_H
 
 #include <xc.h>
+#include <math.h>
 #include "timer.h"
 
 // Define buffer size for magnetometer data (using the last 5 measurements)

@@ -204,11 +204,11 @@ void acquire_accelerometer_data(void) {
  * @return double The arithmetic mean of the values
  */
 double calculate_average(int values[], int size) {
-    double sum = 0.0;
+    int sum = 0;
     // Calculate sum of all values in array
     for(int i=0; i<size; i++) {
         sum += values[i];
     }
     // Return average value
-    return sum/size;
+    return (int)round(sum/size);
 }
