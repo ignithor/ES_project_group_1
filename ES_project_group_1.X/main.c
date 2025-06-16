@@ -96,9 +96,9 @@ int main(void) {
         }
         
         // Calculate averages of last 5 measurements once per main loop iteration
-        double x_acc = calculate_average(x_values_acc, ARRAY_SIZE);
-        double y_acc = calculate_average(y_values_acc, ARRAY_SIZE);
-        double z_acc = calculate_average(z_values_acc, ARRAY_SIZE);
+        double x_acc = filter_acc(x_values_acc, ARRAY_SIZE);
+        double y_acc = filter_acc(y_values_acc, ARRAY_SIZE);
+        double z_acc = filter_acc(z_values_acc, ARRAY_SIZE);
 
         // Process and transmit ACC data at configurable rate (xx Hz)
         if (currentRate > 0) {
