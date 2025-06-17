@@ -13,6 +13,7 @@
 #include "timer.h"
 #include "uart.h"
 #include "adc.h"
+#include <stdio.h>
 
 
 // State definitions
@@ -41,18 +42,12 @@ extern volatile uint8_t rxStringReady;
 // Define TURN signal pins
 #define TURN_L LATFbits.LATF1
 #define TURN_R LATBbits.LATB8
-#include "stdlib.h"
-#include <stdio.h>
-#include <string.h>
-#include <math.h>
 
 extern int x_values_acc[ARRAY_SIZE];
 extern int y_values_acc[ARRAY_SIZE];
 extern int z_values_acc[ARRAY_SIZE];
 
 unsigned int uart_period_ms = 200;
-
-char localCopy[RX_BUFFER_SIZE];
 
 int main(void) {
     // Disable all analog functionality on pins to use them as digital I/O
@@ -187,8 +182,8 @@ int main(void) {
         
         // Update timing counters
         tmr_counter_led += 2; // Increment by 2ms
-        tmr_counter_accelerometer += 10;
-        tmr_counter_uart += 10;
+        tmr_counter_accelerometer += 2;
+        tmr_counter_uart += 2;
     }
     return 0;
 }
