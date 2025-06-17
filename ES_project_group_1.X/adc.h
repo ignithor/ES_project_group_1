@@ -4,9 +4,11 @@
 #include <xc.h> // include processor files - each processor file is guarded.  
 #include <math.h>
 
-void setup_adc();
+#define BUFFER_SIZE 5
 
+void setup_adc();
 float adc_distance(void);
+int average_distance(void);
 
 #endif	/* XC_HEADER_TEMPLATE_H */
 

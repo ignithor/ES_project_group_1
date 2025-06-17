@@ -13,6 +13,8 @@
 #include "timer.h"
 #include "uart.h"
 #include "adc.h"
+#include <stdio.h>
+
 
 
 // State definitions
@@ -53,7 +55,7 @@ int main(void) {
     TURN_R = 0;
 
     float distance = 0.0; // Variable to store distance from IR sensor
-    float distance_threshold = 0.3; // Distance threshold for emergency state (30cm)
+    float distance_threshold = 0.2; // Distance threshold for emergency state (15cm)
 
     // Initialize states
     current_state = STATE_WAIT_FOR_START;
@@ -73,6 +75,7 @@ int main(void) {
     int tmr_counter_led = 0;
     int tmr_counter_side_leds = 0;
     int tmr_counter_emergency = 0;
+    int tmr_counter_send_distance = 0;
 
     while (1) {
         // Handle LED blinking (1000ms period)
@@ -82,6 +85,13 @@ int main(void) {
         }
 
         distance = adc_distance(); // Read distance from ADC
+
+        if (tmr_counter_send_distance == 100) { // Send distance every 100ms
+            char distance_message[TX_BUFFER_SIZE];
+            sprintf(distance_message, "$MDIST,%d*", average_distance());
+            UART_SendString(distance_message);
+            tmr_counter_send_distance = 0; // Reset send distance counter
+        }
 
         if (current_state == STATE_MOVING) {
             if (distance < distance_threshold) {
@@ -119,6 +129,7 @@ int main(void) {
         }
 
         // Update timing counters
+        tmr_counter_send_distance += 2; // Increment by 2ms
         tmr_counter_led += 2; // Increment by 2ms
 
         // Wait for next timer period

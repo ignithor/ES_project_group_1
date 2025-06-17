@@ -1,5 +1,9 @@
 #include "adc.h"
 
+float distance_buffer[BUFFER_SIZE];
+int buffer_index = 0;
+int buffer_filled = 0;
+
 void setup_adc(void){
     
     // Configure only the analog pins to be used
@@ -27,13 +31,39 @@ void setup_adc(void){
 
 
 float adc_distance(void) {
- // Read ADC: Manual sampling & Automatic conversion
-        AD1CON1bits.SAMP = 1; // Start sampling
-        while (!AD1CON1bits.DONE); // Wait for the conversion to complete
-        int ADC_value = ADC1BUF0; // Read the conversion result
+    // Read ADC: Manual sampling & Automatic conversion
+    AD1CON1bits.SAMP = 1; // Start sampling
+    while (!AD1CON1bits.DONE); // Wait for the conversion to complete
+    int ADC_value = ADC1BUF0; // Read the conversion result
 
-        // Convert the result distance
-        float voltage = (float) ADC_value * 3.3 / 1023;
-        float distance = 2.34 - 4.74 * voltage + 4.06 * pow(voltage, 2) - 1.60 * pow(voltage, 3) + 0.24 * pow(voltage, 4);
-        return distance; // Return the calculated distance
+    // Convert the result to distance
+    float voltage = (float)ADC_value * 3.3 / 1023;
+    // float voltage = (float)ADC_value * 3.3 / 4095;
+
+    float distance = 2.34 - 4.74 * voltage + 4.06 * pow(voltage, 2) - 1.60 * pow(voltage, 3) + 0.24 * pow(voltage, 4);
+
+    // Store in circular buffer
+    distance_buffer[buffer_index] = distance;
+    buffer_index = (buffer_index + 1) % BUFFER_SIZE;
+    if (buffer_filled < BUFFER_SIZE) {
+        buffer_filled++;
+    }
+    return distance;
 }
+
+int average_distance(void) {
+    float sum = 0.0;
+    int i;
+
+    if (buffer_filled == 0) {
+        return 0.0; // Avoid division by zero
+    }
+
+    for (i = 0; i < buffer_filled; i++) {
+        sum += distance_buffer[i];
+    }
+    int result = (sum *100) / buffer_filled;
+
+    return result;
+}
+
