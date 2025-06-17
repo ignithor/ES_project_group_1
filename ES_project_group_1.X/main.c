@@ -46,8 +46,6 @@ extern int x_values_acc[ARRAY_SIZE];
 extern int y_values_acc[ARRAY_SIZE];
 extern int z_values_acc[ARRAY_SIZE];
 
-unsigned int uart_period_ms = 200;
-
 int main(void) {
     // Disable all analog functionality on pins to use them as digital I/O
     ANSELA = ANSELB = ANSELC = ANSELD = ANSELE = ANSELG = 0x0000;
@@ -153,22 +151,28 @@ int main(void) {
         }
 
         // Acquire accelerometer data at 10Hz (every 100ms)
-        if (++tmr_counter_accelerometer >= 100) {
+        if (tmr_counter_accelerometer = 100) {
+            tmr_counter_accelerometer = 0; // Reset accelerometer counter
             acquire_accelerometer_data();
-            tmr_counter_accelerometer = 0;
-        }
+            // Filter accelerometer value
+            int x_acc = filter_accelerometer(x_values_acc, ARRAY_SIZE, 'x');
+            int y_acc = filter_accelerometer(y_values_acc, ARRAY_SIZE, 'y');
+            int z_acc = filter_accelerometer(z_values_acc, ARRAY_SIZE, 'z');
 
-        // Filter accelerometer value
-        int x_acc = filter_accelerometer(x_values_acc, ARRAY_SIZE, 'x');
-        int y_acc = filter_accelerometer(y_values_acc, ARRAY_SIZE, 'y');
-        int z_acc = filter_accelerometer(z_values_acc, ARRAY_SIZE, 'z');
-
-        // Process and transmit ACC data at configurable rate (10 Hz)
-        if (tmr_counter_uart % uart_period_ms == 0) {
             sprintf(acc_message, "$MACC,%d,%d,%d*\r\n", x_acc, y_acc, z_acc);
             UART_SendString(acc_message);
             tmr_counter_uart = 0;
         }
+
+        // Process and transmit ACC data at configurable rate (10 Hz)
+        // if (tmr_counter_uart % uart_period_ms == 0) {
+        //     sprintf(acc_message, "$MACC,%d,%d,%d*\r\n", x_acc, y_acc, z_acc);
+        //     UART_SendString(acc_message);
+        //     tmr_counter_uart = 0;
+        // }
+        // if (tmr_counter_uart == 100) {
+
+        // }
 
         // Maintain precise 500Hz loop timing
         tmr_wait_period(TIMER1); // Wait for timer period completion
