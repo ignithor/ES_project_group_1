@@ -135,18 +135,26 @@ void acquire_accelerometer_data(void) {
  * @param size Number of elements in the array
  * @return integer of the arithmetic mean of the values
  */
-int filter_acc(int values[], int size) {
-    int sum = 0;
+int filter_accelerometer(int values[], int size, char axis) {   
+    int bias =0;
+    // Set the accelerometer offset for each axis when "wait for start" state
+    switch(axis) {
+        case 'x': bias = -70; break;
+        case 'y': bias = -94; break;
+        case 'z': bias = 983; break;
+        default: bias = 0; break;
+    }
+
     // Calculate sum of all values in array
+    int sum = 0;
     for(int i=0; i<size; i++) {
         sum += values[i];
     }
     double raw_average = (double)sum/size;
 
     // Convert raw average to acceleration in [mg]
-    // int acc_in_mg = (int)round(1.95*raw_average);
     int acc_in_mg = (int)round(0.977 * raw_average);
 
-    // Return average value
-    return acc_in_mg;
+    // Return average value after bias correction
+    return acc_in_mg - bias;
 }

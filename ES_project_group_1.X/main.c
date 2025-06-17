@@ -36,7 +36,6 @@ extern volatile uint8_t rxStringReady;
 
 // LED pin definition.
 #define LED1 LATAbits.LATA0
-
 #define LED2 LATGbits.LATG9
 
 // Define TURN signal pins
@@ -96,13 +95,7 @@ int main(void) {
 
     // Configure accelerometer
     accelerometer_config();
-
     char acc_message[32]; // Buffer for ACC message
-
-    // Set the average of accelerometer offset when "wait for start" state
-    int x_bias = -70;  
-    int y_bias = -94;
-    int z_bias = 983;
 
     while (1) {
         if (rxStringReady) {
@@ -165,10 +158,10 @@ int main(void) {
             tmr_counter_accelerometer = 0;
         }
 
-        // Calculate averages of last 5 measurements once per main loop iteration
-        int x_acc = filter_acc(x_values_acc, ARRAY_SIZE)-x_bias;
-        int y_acc = filter_acc(y_values_acc, ARRAY_SIZE)-y_bias;
-        int z_acc = filter_acc(z_values_acc, ARRAY_SIZE)-z_bias;
+        // Filter accelerometer value
+        int x_acc = filter_accelerometer(x_values_acc, ARRAY_SIZE, 'x');
+        int y_acc = filter_accelerometer(y_values_acc, ARRAY_SIZE, 'y');
+        int z_acc = filter_accelerometer(z_values_acc, ARRAY_SIZE, 'z');
 
         // Process and transmit ACC data at configurable rate (10 Hz)
         if (tmr_counter_uart % uart_period_ms == 0) {
@@ -180,8 +173,8 @@ int main(void) {
         // Maintain precise 500Hz loop timing
         tmr_wait_period(TIMER1); // Wait for timer period completion
         
-        // Update timing counters
-        tmr_counter_led += 2; // Increment by 2ms
+        // Update timing counters (increment by 2ms)
+        tmr_counter_led += 2; 
         tmr_counter_accelerometer += 2;
         tmr_counter_uart += 2;
     }

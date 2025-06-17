@@ -62,6 +62,6 @@ void acquire_accelerometer_data(void);
  * @return double The computed average.
  */
 // double calculate_average(int values[], int size);
-int filter_acc(int values[], int size);
+int filter_accelerometer(int values[], int size, char axis);
 
 #endif // SPI_H
