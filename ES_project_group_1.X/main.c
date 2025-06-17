@@ -95,10 +95,14 @@ int main(void) {
             tmr_counter_accelerometer = 0;
         }
         
+        int x_bias = -70;  // average when stopping
+        int y_bias = -94;
+        int z_bias = -1983;
+
         // Calculate averages of last 5 measurements once per main loop iteration
-        int x_acc = filter_acc(x_values_acc, ARRAY_SIZE);
-        int y_acc = filter_acc(y_values_acc, ARRAY_SIZE);
-        int z_acc = filter_acc(z_values_acc, ARRAY_SIZE);
+        int x_acc = filter_acc(x_values_acc, ARRAY_SIZE)-x_bias;
+        int y_acc = filter_acc(y_values_acc, ARRAY_SIZE)-y_bias;
+        int z_acc = filter_acc(z_values_acc, ARRAY_SIZE)-z_bias;
 
         // Process and transmit ACC data at configurable rate (xx Hz)
         if (currentRate > 0) {
