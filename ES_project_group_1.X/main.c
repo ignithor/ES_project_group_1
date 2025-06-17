@@ -46,7 +46,6 @@ extern volatile uint8_t rxStringReady;
 #include <string.h>
 #include <math.h>
 
-extern uint8_t currentRate; // Initialize with 5 Hz as required
 extern int x_values_acc[ARRAY_SIZE];
 extern int y_values_acc[ARRAY_SIZE];
 extern int z_values_acc[ARRAY_SIZE];
@@ -176,14 +175,11 @@ int main(void) {
         int y_acc = filter_acc(y_values_acc, ARRAY_SIZE)-y_bias;
         int z_acc = filter_acc(z_values_acc, ARRAY_SIZE)-z_bias;
 
-        // Process and transmit ACC data at configurable rate (xx Hz)
-        if (currentRate > 0) {
-            uart_period_ms = (1.0 / currentRate)*1000.0;
-            if (tmr_counter_uart % uart_period_ms == 0) {
-                sprintf(acc_message, "$MACC,%d,%d,%d*\r\n", x_acc, y_acc, z_acc);
-                UART_SendString(acc_message);
-                tmr_counter_uart = 0;
-            }
+        // Process and transmit ACC data at configurable rate (10 Hz)
+        if (tmr_counter_uart % uart_period_ms == 0) {
+            sprintf(acc_message, "$MACC,%d,%d,%d*\r\n", x_acc, y_acc, z_acc);
+            UART_SendString(acc_message);
+            tmr_counter_uart = 0;
         }
 
         // Maintain precise 500Hz loop timing
