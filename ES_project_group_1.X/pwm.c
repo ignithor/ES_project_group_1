@@ -1,110 +1,119 @@
-
 #include <xc.h>
 #include "pwm.h"
 
-/**
- * Remap Programmable pins for Output Compare, sets RD1 - RD4 bits as an output
- */
-void init_pwm() {
-    /* Reprogram the pins  for output */
-    TRISDbits.TRISD1 = 0; // RD1 Goes to PWM A
-    TRISDbits.TRISD2 = 0; // RD2 Goes to PWM B
-    TRISDbits.TRISD3 = 0; // RD3 Goes to PWM C
-    TRISDbits.TRISD4 = 0; // RD4 Goes to PWM D
+// Initialize PWM modules for motor control
+void init_pwm(void) {
+    // Configure RD1-RD4 as outputs for motor control
+    TRISDbits.TRISD1 = 0; // RD1 = OC1 (Left Backward)
+    TRISDbits.TRISD2 = 0; // RD2 = OC2 (Left Forward)
+    TRISDbits.TRISD3 = 0; // RD3 = OC3 (Right Backward)
+    TRISDbits.TRISD4 = 0; // RD4 = OC4 (Right Forward)
+
+    // Remap RP pins to Output Compare modules
+    RPOR0bits.RP65R = 0b010000; // RD1 = RP65 -> OC1 (Left Backward)
+    RPOR1bits.RP66R = 0b010001; // RD2 = RP66 -> OC2 (Left Forward)
+    RPOR1bits.RP67R = 0b010010; // RD3 = RP67 -> OC3 (Right Backward)
+    RPOR2bits.RP68R = 0b010011; // RD4 = RP68 -> OC4 (Right Forward)
+
+    // Disable all PWM modules initially
+    OC1CON1 = OC1CON2 = 0; // Left Backward
+    OC2CON1 = OC2CON2 = 0; // Left Forward
+    OC3CON1 = OC3CON2 = 0; // Right Backward
+    OC4CON1 = OC4CON2 = 0; // Right Forward
+
+    // Initialize all PWM modules with specified period
+    setup_oc_module(&OC1CON1, &OC1CON2, PWM_PERIOD); // Left Backward
+    setup_oc_module(&OC2CON1, &OC2CON2, PWM_PERIOD); // Left Forward
+    setup_oc_module(&OC3CON1, &OC3CON2, PWM_PERIOD); // Right Backward
+    setup_oc_module(&OC4CON1, &OC4CON2, PWM_PERIOD); // Right Forward
 }
 
-/**
- * Remaps pins to set OC1 for Output
- */
-void remap_pins_drive_forward() {
-    /* map out for  output compare */
-    RPOR2bits.RP68R = 0b010000;         // RD4-PWMD outs OC1
-    //    RPOR1bits.RP67R =0b010101     // RD3
-    RPOR1bits.RP66R = 0b010000;         // RD2-PWMB outs OC1
-    //    RPOR0bits.RP65R =             // RD1
+// Configure an Output Compare module for PWM generation
+void setup_oc_module(volatile unsigned int* con1, volatile unsigned int* con2, unsigned int period) {
+    // Clear control registers
+    *con1 = 0;
+    *con2 = 0;
+
+    // Set period value
+    *(con2 + 1) = period;    // OCxRS = period
+
+    // Configure synchronization
+    *con2 |= 0x1F;           // SYNCSEL = OCx itself
+
+    // Configure clock source and PWM mode
+    *con1 |= (0x07 << 0);    // OCTSEL = Peripheral clock (Fcy)
+    *con1 |= (0x06 << 0);    // Edge-aligned PWM mode
 }
 
-/**
- * Remaps pins to set OC1 to RD4 and OC2 to RD2
- */
-void remap_pins_turning() {
-    /* map out for  output compare */
-    RPOR2bits.RP68R = 0b010000;         // RD4-PWMD outs OC1
-    //    RPOR1bits.RP67R =0b010101     // RD3
-    RPOR1bits.RP66R = 0b010001;         // RD2-PWMB outs OC2
-    //    RPOR0bits.RP65R =             // RD1
+// Set PWM duty cycle for a specific Output Compare module
+void set_pwm_duty(volatile unsigned int* oc_r, unsigned int duty) {
+    // Limit duty cycle to PWM_PERIOD
+    if (duty > PWM_PERIOD) {
+        duty = PWM_PERIOD;
+    }
+    *oc_r = duty;
 }
 
-/**
- * Generates PWM to go forward.
- * Sets up Output Compare OC1 by: 
- * 1. Clearing the bits
- * 2. remaps the output pins to send OC1 signal
- * 3. Selects Peripheral Clock TCY = 72 Mhz
- * 4. User defined OC1R -> Duty cycle from 40% to 100% for driving
- * 5. User defined OC1Rs -> Period Count for PWM - right now 7200, which gives
- *    1/Period = 10KHz
- */
-void drive_forward() {
-    // Clear of bits
-    OC1CON1 = 0; 
-    OC1CON2 = 0;
-    
-    remap_pins_drive_forward();
-    
-    OC1CON1bits.OCTSEL = 0x07;      // Select peripheral clock
-    
-    /* OCxR selects duty cycle*/
-    OC1R = 5000;                    // Duty Cycle
-    OC1RS = 7200;                   // Determines the Period
-    OC1CON2bits.SYNCSEL = 0x1F;     // Source as itself
-    
-    /* Select and start the Edge Aligned PWM mode*/
-    OC1CON1bits.OCM = 6;
-}
+// Set PWM for both motors
+void set_motor_pwm(int left_pwm, int right_pwm) {
+    // Control left motor
+    if (left_pwm >= 0) {
+        // Forward direction
+        set_pwm_duty(&OC1R, left_pwm);           // Left backward = 0
+        set_pwm_duty(&OC2R, 0);    // Left forward = duty
+    } else {
+        // Backward direction
+        set_pwm_duty(&OC1R, 0);   // Left backward = |duty|
+        set_pwm_duty(&OC2R, -left_pwm);           // Left forward = 0
+    }
 
-/**
- * Generate PWM for OC1 and OC2 to drive right.
- * Sets up OC1 and OC2 by:
- *      1. Clear bits
- *      2. remaps bits for turning action
- *      3. Sets up OC1 (40% duty)  and OC2 (60% duty)
- *      4. Start generation.
- */
-void drive_right() {
-    /* clear bits at the beginning */
-    OC1CON1 = 0; OC1CON2 = 0;
-    OC2CON1 = 0; OC2CON2 = 0;
-    
-    remap_pins_turning();
-    
-    /* OC1 setup */
-    OC1CON1bits.OCTSEL = 0x07;
-    OC1R = 3000; 
-    OC1RS = 7200;
-    OC1CON2bits.SYNCSEL = 0x1F;
-    
-    /* OC2 setup */
-    OC2CON1bits.OCTSEL = 0x07; 
-    OC2R = 6000;
-    OC2RS = 7200;
-    OC2CON2bits.SYNCSEL = 0x1F;
-    
-    /* Select mode (Edge Aligned PWM) and start */
-    OC1CON1bits.OCM = 6; 
-    OC2CON1bits.OCM = 6;
+    // Control right motor
+    if (right_pwm >= 0) {
+        // Forward direction
+        set_pwm_duty(&OC3R, right_pwm);   // Right forward = duty
+        set_pwm_duty(&OC4R, 0);           // Right backward = 0
+    } else {
+        // Backward direction
+        set_pwm_duty(&OC3R, 0);           // Right forward = 0
+        set_pwm_duty(&OC4R, -right_pwm);  // Right backward = |duty|
+    }
 }
 
 
-/**
- *  Stops PWM Generation, by clearing the bits for OC1 and OC2
- */
-void drive_stop()
-{
-    // OC1
-    OC1CON1 = 0;
-    OC1CON2 = 0;
-    // OC2
-    OC2CON1 = 0;
-    OC2CON2 = 0;
+
+void control_motors(int speed, int yawrate) {
+    // 1. Map speed and yawrate from [-100, 100] to [-PWM_PERIOD, PWM_PERIOD]
+    long speed_pwm = (long)speed * PWM_PERIOD / 100;
+    long yaw_pwm = (long)yawrate * PWM_PERIOD / 100;
+
+    // 2. Mix the speed and yaw signals to get individual motor PWMs
+    // For an anti-clockwise (positive yaw) turn, we want the right motor to go faster
+    // and the left motor to go slower.
+    long left_pwm_raw = speed_pwm - yaw_pwm;
+    long right_pwm_raw = speed_pwm + yaw_pwm;
+
+    // 3. check PWM values to the valid range [-PWM_PERIOD, PWM_PERIOD] if not set it to the limit
+    // to prevent overflow and ensure proper motor driver operation.
+    int left_pwm_final = left_pwm_raw;
+    if (left_pwm_final > PWM_PERIOD) {
+        left_pwm_final = PWM_PERIOD;
+    } else if (left_pwm_final < -PWM_PERIOD) {
+        left_pwm_final = -PWM_PERIOD;
+    }
+
+    int right_pwm_final = right_pwm_raw;
+    if (right_pwm_final > PWM_PERIOD) {
+        right_pwm_final = PWM_PERIOD;
+    } else if (right_pwm_final < -PWM_PERIOD) {
+        right_pwm_final = -PWM_PERIOD;
+    }
+    
+    // 4. Call the low-level motor control function with the calculated PWM values
+    set_motor_pwm(left_pwm_final, right_pwm_final);
 }
+
+// Stop both motors by setting PWM to 0
+void stop_motors(void) {
+    set_motor_pwm(0, 0);
+}
+

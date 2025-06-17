@@ -1,220 +1,163 @@
+/*
+ * Description: This file implements a fully interrupt-driven, non-blocking UART driver
+ * using circular buffers for both transmission (TX) and reception (RX), as suggested
+ * by the assignment to handle tight scheduling. 
+ */
 #include "xc.h"
-#include "timer.h"
-#include "uart.h"
-#include <stdio.h>
 #include <string.h>
-#include <math.h>
-#include "stdlib.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include "uart.h"
 
+// --- Global and Static Variables ---
+
+// RX Buffer and state variables
 volatile char rxBuffer[RX_BUFFER_SIZE];
-volatile uint16_t rxIndex = 0;
+volatile uint16_t rx_idx = 0;
 volatile uint8_t rxStringReady = 0;
 
-uint8_t currentRate = 5; // Initialize with 5 Hz as required
+// TX Circular Buffer
+static volatile char tx_buffer[TX_BUFFER_SIZE];
+static volatile uint16_t tx_head = 0;
+static volatile uint16_t tx_tail = 0;
 
+
+// knows they exist in main.c
+extern volatile int g_speed;
+extern volatile int g_yawrate;
+
+// --- Public Functions ---
 
 void UART_Initialize(void) {
     // PPS configuration
-    RPOR0bits.RP64R = 1;       // Set RP64 as U1TX
-    RPINR18bits.U1RXR = 75;     // Set RP75 as U1RX
+    RPOR0bits.RP64R = 1;      // Set RP64 as U1TX
+    RPINR18bits.U1RXR = 75;   // Set RP75 as U1RX
     
-    tmr_setup_period(TIMER1, 200);
+    // UART mode configuration
+    U1MODEbits.STSEL = 0;     // 1 Stop bit
+    U1MODEbits.PDSEL = 0;     // No Parity, 8 data bits
+    U1MODEbits.ABAUD = 0;     // Auto-Baud Disabled
+    U1MODEbits.BRGH = 0;      // Low Speed mode
+    U1BRG = BRGVAL;           // BAUD Rate Setting for 9600
     
-    // UART configuration
-    U1MODEbits.STSEL = 0;   // 1 Stop bit
-    U1MODEbits.PDSEL = 0;   // No Parity, 8 data bits
-    U1MODEbits.ABAUD = 0;   // Auto-Baud Disabled
-    U1MODEbits.BRGH  = 0;   // Low Speed mode
-
-    U1BRG = BRGVAL;         // BAUD Rate Setting for 9600
-    
-    // Transmit interrupt configuration
-    U1STAbits.UTXISEL0 = 0; // Interrupt after one TX Character is transmitted
+    // TX Interrupt is generated when a character is transferred to the shift register
+    U1STAbits.UTXISEL0 = 0;
     U1STAbits.UTXISEL1 = 0;
     
-    IEC0bits.U1TXIE = 1;    // Enable UART TX Interrupt
-    IEC0bits.U1RXIE = 1;    // Enable UART RX Interrupt
+    IEC0bits.U1RXIE = 1;      // Enable UART RX Interrupt
+    IEC0bits.U1TXIE = 0;      // TX Interrupt is disabled until there is data to send
 
     // Enable UART
-    U1MODEbits.UARTEN = 1;  // Enable UART module
-    U1STAbits.UTXEN = 1;    // Enable UART TX
-    
-    // Clear any pending flags
-    IFS0bits.U1TXIF = 0;
-    IFS0bits.U1RXIF = 0;
+    U1MODEbits.UARTEN = 1;    // Enable UART module
+    U1STAbits.UTXEN = 1;      // Enable UART TX
 }
 
-void UART_SendChar(char data) {
-    while(U1STAbits.UTXBF); // Wait until TX buffer is empty
-    U1TXREG = data;
-}
-
+// Queues a string for transmission. This function is NON-BLOCKING.
 void UART_SendString(const char *str) {
-    while(*str) {
-        UART_SendChar(*str++);
-    }
-}
-
-uint8_t UART_DataAvailable(void) {
-    return U1STAbits.URXDA; // Check if data is available
-}
-
-uint8_t UART_ReceiveErrorCheck(void) {
-    // Returns 1 if error occurred, 0 otherwise
-    if(U1STAbits.FERR) {
-        return 1; // Framing error
-    }
-    if(U1STAbits.OERR) {
-        U1STAbits.OERR = 0; // Clear overrun error
-        return 1; // Overrun error
-    }
-    return 0;
-}
-
-char UART_ReceiveChar(void) {
-    while(!UART_DataAvailable()); // Wait for data
-    if(UART_ReceiveErrorCheck()) {
-        return 0; // Return 0 on error
-    }
-    return U1RXREG;
-}
-
-
-
-void UART_ReceiveString(char* buffer, uint16_t maxLength) {
-    uint16_t i = 0;
-    char received;
-    
-    while(1) {
-        if(UART_DataAvailable()) {
-            received = UART_ReceiveChar();
-            
-            // Echo back the character
-            UART_SendChar(received);
-            
-            // Check for Enter key (CR or LF) to terminate
-            if(received == '\r' || received == '\n') {
-                buffer[i] = '\0'; // Null-terminate the string
-                UART_SendString("\r\n"); // Send new line after Enter
-                break;
-            }
-            // Handle backspace
-            else if(received == '\b' && i > 0) {
-                i--;
-                UART_SendString("\b \b"); // Erase the character on terminal
-            }
-            else if(i < maxLength - 1) {
-                buffer[i++] = received;
-            }
+    // Add all characters to the software buffer
+    while (*str) {
+        uint16_t next_head = (tx_head + 1) % TX_BUFFER_SIZE;
+        if (next_head == tx_tail) {
+            // Buffer is full. Stop adding to prevent an overwrite.
+            // This is better than freezing the whole system.
+            break; 
         }
+        tx_buffer[tx_head] = *str++;
+        tx_head = next_head;
+    }
+
+    // **CRITICAL FIX**: If the TX interrupt is disabled, the transmitter was idle.
+    // We must enable it AND manually set the flag to force the ISR to run once
+    // and begin the transmission process.
+    if (IEC0bits.U1TXIE == 0 && tx_head != tx_tail) {
+        IEC0bits.U1TXIE = 1;   // Enable the interrupt
+        IFS0bits.U1TXIF = 1;   // Manually trigger the interrupt
     }
 }
-
-
-
-void process_rate_command(const char* rateStr) {
-    // Check if the string can be converted to a number
-    char* endptr;
-    long rate = strtol(rateStr, &endptr, 10);
-    
-    // Check if conversion was successful and value is valid
-    if (*endptr != '\0' || rateStr == endptr) {
-        // Not a valid number
-        UART_SendString("$ERR,1*\r\n");
-        return;
-    }
-    
-    // Check against valid rates
-    if (rate == 0 || rate == 1 || rate == 2 || rate == 4 || rate == 5 || rate == 10) {
-        currentRate = (uint8_t)rate;
-        UART_SendString("$OK*\r\n");
-        UART_SendString("New rate set to: ");
-        char rateMsg[10];
-        sprintf(rateMsg, "%d Hz\r\n", currentRate);
-        UART_SendString(rateMsg);
-    } else {
-        // Invalid rate
-        UART_SendString("$ERR,1*\r\n");
-    }
-}
-
 
 void process_uart_command(const char *input) {
-    // Check for RATE command format: $RATE,xx*
-    if (strncmp(input, "$RATE,", 6) == 0) {
-        // Find the asterisk at the end
-        char* asterisk = strchr(input + 6, '*');
-        
-        if (asterisk != NULL && asterisk - (input + 6) > 0) {
-            // Extract the rate part
-            char rateStr[10];
-            strncpy(rateStr, input + 6, asterisk - (input + 6));
-            rateStr[asterisk - (input + 6)] = '\0';
-            
-            process_rate_command(rateStr);
-        } else {
-            // Malformed command
-            UART_SendString("$ERR,1*\r\n");
+    // Check if the command is for motor control
+    if (strncmp(input, "$PCREF,", 7) == 0) {
+        process_pcref_command(input);
+    } 
+    //
+    // in this section future commands will be added
+    //  like in this format
+    // else if (strncmp(input, "$SOME_OTHER_CMD,", 16) == 0) {
+    //     process_some_other_commandd(input from uart);
+    // }
+    //
+    else {
+        UART_SendString("$ERR,Unknown command*\r\n");
+    }
+}
+
+
+void process_pcref_command(const char *command) {
+    int speed, yawrate;
+
+    if (sscanf(command, "$PCREF,%d,%d*", &speed, &yawrate) == 2) {
+        if ((speed >= -100 && speed <= 100) && (yawrate >= -100 && yawrate <= 100)) {
+            // Parsing successful and values are valid.
+            // Update the global variables instead of calling the motor function.
+            g_speed = speed;
+            g_yawrate = yawrate;
         }
     }
-    else if (strcmp(input, "TEST") == 0) {
-        // Test command - echoes back with LED blink
-        UART_SendString("TEST OK\r\n");
-    }
-    else if (strcmp(input, "RATE?") == 0) {
-        // Query current rate
-        UART_SendString("Current rate: ");
-        char rateMsg[10];
-        sprintf(rateMsg, "%d Hz\r\n", currentRate);
-        UART_SendString(rateMsg);
-    }
-    else if (input[0] != '\0') {
-        // Unknown command
-        UART_SendString("Unknown command. Use $RATE,xx* format\r\n");
-    }
 }
 
 
+// --- Interrupt Service Routines (ISRs) ---
 
-void __attribute__((interrupt, no_auto_psv)) _U1TXInterrupt(void){
-    // clear TX interrupt flag
-    IFS0bits.U1TXIF = 0;
-    while(U1STAbits.UTXBF); // Wait until TX buffer is empty
+// TX Interrupt: Handles sending data from the TX circular buffer.
+// This ISR is short, non-blocking, and sends one character per activation. 
+void __attribute__((interrupt, no_auto_psv)) _U1TXInterrupt(void) {
+    IFS0bits.U1TXIF = 0; // Clear the interrupt flag immediately
+
+    if (tx_head != tx_tail) {
+        // Buffer is not empty, send the next character.
+        // The hardware will set U1TXIF again when this transfer completes,
+        // which will call this ISR again, creating a chain reaction.
+        U1TXREG = tx_buffer[tx_tail];
+        tx_tail = (tx_tail + 1) % TX_BUFFER_SIZE;
+    } 
+    
+    if (tx_head == tx_tail) {
+        // Buffer is now empty, so the job is done. Disable the interrupt.
+        // It will be re-enabled and re-triggered by UART_SendString when new data arrives.
+        IEC0bits.U1TXIE = 0;
+    }
 }
 
+// RX Interrupt: Handles received characters, echoes them, and builds a command string. 
 void __attribute__((interrupt, no_auto_psv)) _U1RXInterrupt(void) {
     IFS0bits.U1RXIF = 0; // Clear RX interrupt flag
+    if (U1STAbits.OERR) { U1STAbits.OERR = 0; }
+    
+    char received = U1RXREG; // Read character from hardware
 
-    // Check for errors
-    if (U1STAbits.FERR || U1STAbits.OERR) {
-        if (U1STAbits.OERR)
-            U1STAbits.OERR = 0; // Clear overrun error
-        //volatile char dummy = U1RXREG; // Clear RX register
-        return;
-    }
+    // --- Non-blocking Echo ---
+    // Place the received character into the TX buffer to be sent by the TX interrupt.
+    uint16_t next_head = (tx_head + 1) % TX_BUFFER_SIZE;
+    if (next_head != tx_tail) { 
+        tx_buffer[tx_head] = received;
+        tx_head = next_head;
 
-    char received = U1RXREG;
-
-    // Echo the character back
-    UART_SendChar(received);
-
-    // Handle backspace
-    if (received == '\b' && rxIndex > 0) {
-        rxIndex--;
-        return;
-    }
-
-    // Handle Enter (CR or LF)
-    if (received == '\r' || received == '\n') {
-        if (rxIndex > 0) {
-            rxBuffer[rxIndex] = '\0';   // Null-terminate the string
-            rxStringReady = 1;          // Mark string ready
+        // Same kick-start logic as UART_SendString
+        if (IEC0bits.U1TXIE == 0) {
+            IEC0bits.U1TXIE = 1;
+            IFS0bits.U1TXIF = 1;
         }
-        return;
     }
 
-    // Store character if space available
-    if (rxIndex < RX_BUFFER_SIZE - 1) {
-        rxBuffer[rxIndex++] = received;
+    // --- Process Character for Command String ---
+    if (received == '\r' || received == '\n') {
+        if (rx_idx > 0) {
+            rxBuffer[rx_idx] = '\0'; // Null-terminate
+            rxStringReady = 1;       // Set flag for the main loop
+            rx_idx = 0;              // Reset for next command
+        }
+    } else if (rx_idx < RX_BUFFER_SIZE - 1) {
+        rxBuffer[rx_idx++] = received;
     }
 }
