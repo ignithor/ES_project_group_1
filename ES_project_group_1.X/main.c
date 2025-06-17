@@ -97,7 +97,7 @@ int main(void) {
         
         int x_bias = -70;  // average when stopping
         int y_bias = -94;
-        int z_bias = -1983;
+        int z_bias = 983;
 
         // Calculate averages of last 5 measurements once per main loop iteration
         int x_acc = filter_acc(x_values_acc, ARRAY_SIZE)-x_bias;
