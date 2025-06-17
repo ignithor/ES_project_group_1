@@ -1,11 +1,5 @@
 #include "spi.h"
 
-//// Global variable definitions for magnetometer sensor data storage
-//int x_values_mag[ARRAY_SIZE];  // X-axis magnetometer readings buffer
-//int y_values_mag[ARRAY_SIZE];  // Y-axis magnetometer readings buffer
-//int z_values_mag[ARRAY_SIZE];  // Z-axis magnetometer readings buffer
-//int array_index_mag = 0;       // Current position in circular buffer
-
 // Global variable definitions for accelerometer sensor data storage
 int x_values_acc[ARRAY_SIZE];  // X-axis accelerometer readings buffer
 int y_values_acc[ARRAY_SIZE];  // Y-axis accelerometer readings buffer
@@ -72,73 +66,6 @@ void spi_setup(void) {
     SPI1STATbits.SPIEN = 1;      // Enable SPI peripheral
     SPI1STATbits.SPIROV = 0;     // Clear receive overflow flag
 }
-
-///**
-// * @brief Configures the magnetometer sensor
-// * 
-// * Initializes the BMX055 magnetometer by:
-// * 1. Entering sleep mode
-// * 2. Setting data rate to 25Hz (0b110)
-// * 3. Configuring for active mode
-// */
-//void magnetometer_config(void) {
-//    // Step 1: Put magnetometer in sleep mode first (required before changing settings)
-//    LATDbits.LATD6 = 0;          // Enable chip select (active low)
-//    spi_write(0x4B);             // Power control register address
-//    spi_write(0x01);             // Sleep mode value
-//    LATDbits.LATD6 = 1;          // Disable chip select
-//    tmr_setup_period(TIMER2, 2);     //setup timer 2 to be 2 ms
-//    tmr_wait_period(TIMER2);      // Wait 2ms for settings to apply
-//    
-//    // Step 2 & 3: Configure data rate and activate the sensor
-//    LATDbits.LATD6 = 0;          // Enable chip select (active low)
-//    spi_write(0x4C);             // Op mode register address
-//    spi_write(0b00110000);       // Set data rate to 0b110 (25Hz)
-//    LATDbits.LATD6 = 1;          // Disable chip select
-//    tmr_setup_period(TIMER2, 2);     //setup timer 2 to be 2 ms
-//    tmr_wait_period(TIMER2);      // Wait 2ms for settings to apply
-//}
-//
-///**
-// * @brief Acquires measurement data from the magnetometer
-// * 
-// * Reads the X, Y, and Z axis magnetic field measurements from the
-// * BMX055 sensor and stores them in the respective circular buffers.
-// * Each axis requires specific bit manipulation to obtain correct values.
-// */
-//void acquire_magnetometer_data(void) {
-//    // Begin SPI transaction and select magnetometer register for reading
-//    LATDbits.LATD6 = 0;                      // Enable chip select
-//    int first_addr = 0x42;                   // First data register address
-//    spi_write(first_addr | 0x80);            // Set MSB for read operation
-//    
-//    // Acquire X-axis magnetic data
-//    uint8_t x_LSB_byte = spi_write(0x00);    // Read X-LSB register
-//    uint8_t x_MSB_byte = spi_write(0x00);    // Read X-MSB register
-//    // Process X-axis data: 13-bit value with 3 LSBs reserved
-//    int x_value = ((x_MSB_byte << 8) | (x_LSB_byte & 0xF8)) / 8;
-//    x_values_mag[array_index_mag] = x_value;
-//    
-//    // Acquire Y-axis magnetic data
-//    uint8_t y_LSB_byte = spi_write(0x00);    // Read Y-LSB register
-//    uint8_t y_MSB_byte = spi_write(0x00);    // Read Y-MSB register
-//    // Process Y-axis data: 13-bit value with 3 LSBs reserved
-//    int y_value = ((y_MSB_byte << 8) | (y_LSB_byte & 0xF8)) / 8;
-//    y_values_mag[array_index_mag] = y_value;
-//    
-//    // Acquire Z-axis magnetic data
-//    uint8_t z_LSB_byte = spi_write(0x00);    // Read Z-LSB register
-//    uint8_t z_MSB_byte = spi_write(0x00);    // Read Z-MSB register
-//    // Process Z-axis data: 15-bit value with 1 LSB reserved
-//    int z_value = ((z_MSB_byte << 8) | (z_LSB_byte & 0xFE)) / 2;
-//    z_values_mag[array_index_mag] = z_value;
-//    
-//    // End SPI transaction
-//    LATDbits.LATD6 = 1;                      // Disable chip select
-//    
-//    // Update circular buffer index for next reading
-//    array_index_mag = (array_index_mag + 1) % ARRAY_SIZE;
-//}
 
 void accelerometer_config(void) {
     // Power on the accelerometer (exit suspend mode)
@@ -217,7 +144,8 @@ int filter_acc(int values[], int size) {
     double raw_average = (double)sum/size;
 
     // Convert raw average to acceleration in [mg]
-    int acc_in_mg = (int)round(1.95*raw_average);
+    // int acc_in_mg = (int)round(1.95*raw_average);
+    int acc_in_mg = (int)round(0.977 * raw_average);
 
     // Return average value
     return acc_in_mg;
