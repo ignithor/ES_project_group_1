@@ -154,6 +154,10 @@ int main(void) {
         if (tmr_counter_accelerometer = 100) {
             tmr_counter_accelerometer = 0; // Reset accelerometer counter
             acquire_accelerometer_data();
+        }
+
+        // Process and transmit ACC data at configurable rate (10 Hz)
+        if (tmr_counter_uart == 100) {
             // Filter accelerometer value
             int x_acc = filter_accelerometer(x_values_acc, ARRAY_SIZE, 'x');
             int y_acc = filter_accelerometer(y_values_acc, ARRAY_SIZE, 'y');
@@ -163,16 +167,6 @@ int main(void) {
             UART_SendString(acc_message);
             tmr_counter_uart = 0;
         }
-
-        // Process and transmit ACC data at configurable rate (10 Hz)
-        // if (tmr_counter_uart % uart_period_ms == 0) {
-        //     sprintf(acc_message, "$MACC,%d,%d,%d*\r\n", x_acc, y_acc, z_acc);
-        //     UART_SendString(acc_message);
-        //     tmr_counter_uart = 0;
-        // }
-        // if (tmr_counter_uart == 100) {
-
-        // }
 
         // Maintain precise 500Hz loop timing
         tmr_wait_period(TIMER1); // Wait for timer period completion

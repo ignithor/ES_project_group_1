@@ -73,8 +73,6 @@ void accelerometer_config(void) {
     spi_write(0x11);             // PMU_LPW register (power mode config)
     spi_write(0x00);             // Normal mode 
     ACC_CS = 1;          // Disable chip select
-    tmr_setup_period(TIMER2, 2);
-    tmr_wait_period(TIMER2);     // Wait 2ms
 
     // Set data rate and bandwidth (e.g., 10Hz, filtered)
     ACC_CS = 0;          // Enable chip select
@@ -86,8 +84,6 @@ void accelerometer_config(void) {
     spi_write(0x05); // ±4g range (1.95 mg/LSB)
 
     ACC_CS = 1;          // Disable chip select
-    tmr_setup_period(TIMER2, 2);
-    tmr_wait_period(TIMER2);     // Wait 2ms
 }
 
 void acquire_accelerometer_data(void) {
