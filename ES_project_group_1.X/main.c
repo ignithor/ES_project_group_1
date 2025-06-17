@@ -24,6 +24,15 @@
 int current_state; // Current state of the robot
 int is_pwm_on; // Flag for PWM generation status
 
+// 'volatile' is used because these are modified by UART and read by main loop
+volatile int g_speed = 0;
+volatile int g_yawrate = 0;
+
+
+extern volatile char rxBuffer[RX_BUFFER_SIZE];
+extern volatile uint8_t rxStringReady;
+
+
 // LED pin definition.
 #define LED1 LATAbits.LATA0
 
@@ -102,6 +111,13 @@ int main(void) {
     int z_bias = 983;
 
     while (1) {
+        if (rxStringReady) {
+        // A command is ready. Call the processor function.
+        process_uart_command((const char *)rxBuffer);
+        // CRITICAL: Clear the flag so we don't process the same command again.
+        rxStringReady = 0; // it will be setted later if we recieve another command from uart
+        }
+        
         // Handle LED blinking (1000ms period)
         if (tmr_counter_led == 500) {
             LED1 = !LED1;
@@ -117,6 +133,10 @@ int main(void) {
                 tmr_counter_emergency = 0; // Reset emergency counter
                 current_state = STATE_EMERGENCY;
                 stop_motors();
+            }
+            else
+            {
+                control_motors(g_speed, g_yawrate);
             }
         }
 
