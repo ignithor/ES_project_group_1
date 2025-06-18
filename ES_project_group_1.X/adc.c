@@ -1,8 +1,11 @@
 #include "adc.h"
 
 float distance_buffer[BUFFER_SIZE];
+float battery_buffer[BUFFER_SIZE];
 int buffer_index = 0;
 int buffer_filled = 0;
+int battery_buffer_index = 0;
+int battery_buffer_filled = 0;
 
 void setup_adc(void) {
 
@@ -79,5 +82,28 @@ float adc_battery_voltage(void) {
     // Convert ADC value to battery voltage (considering voltage divider)
     float bat_vsense = (float)ADC_value * 3.3 / 1023;
     float vbat = bat_vsense * 3;    // Due to voltage divider (1/3 ratio)
+    
+    // Store in circular buffer
+    battery_buffer[battery_buffer_index] = vbat;
+    battery_buffer_index = (battery_buffer_index + 1) % BUFFER_SIZE;
+    if (battery_buffer_filled < BUFFER_SIZE) {
+        battery_buffer_filled++;
+    }
+    
     return vbat;
+}
+
+float average_battery_voltage(void) {
+    float sum = 0.0;
+    int i;
+
+    if (battery_buffer_filled == 0) {
+        return 0.0;
+    }
+
+    for (i = 0; i < battery_buffer_filled; i++) {
+        sum += battery_buffer[i];
+    }
+    
+    return sum / battery_buffer_filled;
 }

@@ -90,6 +90,7 @@ int main(void) {
     int tmr_counter_accelerometer = 0;
     int tmr_counter_uart = 0;
     int tmr_counter_battery = 0;
+    int tmr_counter_battery_read = 0;
 
     // Configure SPI
     spi_setup();
@@ -120,11 +121,17 @@ int main(void) {
             tmr_counter_send_distance = 0; // Reset send distance counter
         }
 
-        // Acquire battery voltage at 1Hz (every 1000ms)
+        // Acquire battery voltage at 5Hz (every 200ms)
+        if (tmr_counter_battery_read == 200) {
+            adc_battery_voltage();
+            tmr_counter_battery_read = 0;
+        }
+
+        // Send battery voltage at 1Hz (every 1000ms)
         if (tmr_counter_battery == 1000) {
-            double battery_voltage = adc_battery_voltage();
+            double avg_battery_voltage = average_battery_voltage();
             char bat_message[20];
-            sprintf(bat_message, "$MBATT,%.2f*\r\n", battery_voltage);
+            sprintf(bat_message, "$MBATT,%.2f*\r\n", avg_battery_voltage);
             UART_SendString(bat_message);
             tmr_counter_battery = 0;
         }
@@ -190,6 +197,7 @@ int main(void) {
         tmr_counter_accelerometer += 2;
         tmr_counter_uart += 2;
         tmr_counter_battery += 2;
+        tmr_counter_battery_read += 2;
     }
     return 0;
 }
