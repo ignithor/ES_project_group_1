@@ -82,11 +82,25 @@ void process_uart_command(const char *input) {
     } 
     //
     // in this section future commands will be added
-    //  like in this format
-    // else if (strncmp(input, "$SOME_OTHER_CMD,", 16) == 0) {
-    //     process_some_other_commandd(input from uart);
-    // }
-    //
+    // like in this format
+    else if (strncmp(input, "$PCSTP,", 7) == 0) {
+        if (!STATE_EMERGENCY){
+            // switch to the wait for start state.
+    //     process_some_other_commandd(input from uart); $MACK,1*. 
+    }
+    else{
+        // send $MACK,0*.
+    }
+    else if (strncmp(input, "$PCSTT,", 7) == 0) {
+        if(!STATE_EMERGENCY){
+            // switch to the wait for moving state.
+            // send $MACK,1*. 
+        }
+        else{
+            // send $MACK,0*.
+        }
+
+    }
     else {
         UART_SendString("$ERR,Unknown command*\r\n");
     }
