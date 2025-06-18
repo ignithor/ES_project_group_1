@@ -101,6 +101,7 @@ void process_uart_command(const char *input) {
         case CMD_PCSTP:
             if (current_state != STATE_EMERGENCY) {
                 current_state = STATE_WAIT_FOR_START;
+                stop_motors();
                 UART_SendString("$MACK,1*\r\n");
             } else {
                 UART_SendString("$MACK,0*\r\n");

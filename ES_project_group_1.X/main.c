@@ -111,14 +111,14 @@ int main(void) {
 
         if (tmr_counter_send_distance == 100) { // Send distance every 100ms
             char distance_message[TX_BUFFER_SIZE];
-            sprintf(distance_message, "$MDIST,%d*", average_distance());
+            sprintf(distance_message, "$MDIST,%d*\r\n", average_distance());
             UART_SendString(distance_message);
             tmr_counter_send_distance = 0; // Reset send distance counter
         }
 
         if (current_state == STATE_MOVING) {
             if (distance < distance_threshold) {
-                UART_SendString("$MEMRG,1*");
+                UART_SendString("$MEMRG,1* \r\n");
                 LATGbits.LATG9 = 1; // DEBUG
                 tmr_counter_emergency = 0; // Reset emergency counter
                 current_state = STATE_EMERGENCY;
@@ -147,7 +147,7 @@ int main(void) {
                     TURN_L = 0; // Turn off left turn signal
                     TURN_R = 0; // Turn off right turn signal
                     tmr_counter_side_leds = 0; // Reset side LED counter
-                    UART_SendString("$MEMRG,0");
+                    UART_SendString("$MEMRG,0 \r\n");
                 }
 
             }
