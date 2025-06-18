@@ -2,6 +2,7 @@
 #include "pwm.h"
 
 // Initialize PWM modules for motor control
+
 void init_pwm(void) {
     // Configure RD1-RD4 as outputs for motor control
     TRISDbits.TRISD1 = 0; // RD1 = OC1 (Left Backward)
@@ -29,23 +30,25 @@ void init_pwm(void) {
 }
 
 // Configure an Output Compare module for PWM generation
+
 void setup_oc_module(volatile unsigned int* con1, volatile unsigned int* con2, unsigned int period) {
     // Clear control registers
     *con1 = 0;
     *con2 = 0;
 
     // Set period value
-    *(con2 + 1) = period;    // OCxRS = period
+    *(con2 + 1) = period; // OCxRS = period
 
     // Configure synchronization
-    *con2 |= 0x1F;           // SYNCSEL = OCx itself
+    *con2 |= 0x1F; // SYNCSEL = OCx itself
 
     // Configure clock source and PWM mode
-    *con1 |= (0x07 << 0);    // OCTSEL = Peripheral clock (Fcy)
-    *con1 |= (0x06 << 0);    // Edge-aligned PWM mode
+    *con1 |= (0x07 << 0); // OCTSEL = Peripheral clock (Fcy)
+    *con1 |= (0x06 << 0); // Edge-aligned PWM mode
 }
 
 // Set PWM duty cycle for a specific Output Compare module
+
 void set_pwm_duty(volatile unsigned int* oc_r, unsigned int duty) {
     // Limit duty cycle to PWM_PERIOD
     if (duty > PWM_PERIOD) {
@@ -55,36 +58,35 @@ void set_pwm_duty(volatile unsigned int* oc_r, unsigned int duty) {
 }
 
 // Set PWM for both motors
+
 void set_motor_pwm(int left_pwm, int right_pwm) {
     // Control left motor
     if (left_pwm >= 0) {
         // Forward direction
-        set_pwm_duty(&OC1R, left_pwm);           // Left backward = 0
-        set_pwm_duty(&OC2R, 0);    // Left forward = duty
+        set_pwm_duty(&OC1R, left_pwm); // Left backward = 0
+        set_pwm_duty(&OC2R, 0); // Left forward = duty
     } else {
         // Backward direction
-        set_pwm_duty(&OC1R, 0);   // Left backward = |duty|
-        set_pwm_duty(&OC2R, -left_pwm);           // Left forward = 0
+        set_pwm_duty(&OC1R, 0); // Left backward = |duty|
+        set_pwm_duty(&OC2R, -left_pwm); // Left forward = 0
     }
 
     // Control right motor
     if (right_pwm >= 0) {
         // Forward direction
-        set_pwm_duty(&OC3R, right_pwm);   // Right forward = duty
-        set_pwm_duty(&OC4R, 0);           // Right backward = 0
+        set_pwm_duty(&OC3R, right_pwm); // Right forward = duty
+        set_pwm_duty(&OC4R, 0); // Right backward = 0
     } else {
         // Backward direction
-        set_pwm_duty(&OC3R, 0);           // Right forward = 0
-        set_pwm_duty(&OC4R, -right_pwm);  // Right backward = |duty|
+        set_pwm_duty(&OC3R, 0); // Right forward = 0
+        set_pwm_duty(&OC4R, -right_pwm); // Right backward = |duty|
     }
 }
 
-
-
 void control_motors(int speed, int yawrate) {
     // 1. Map speed and yawrate from [-100, 100] to [-PWM_PERIOD, PWM_PERIOD]
-    long speed_pwm = (long)speed * PWM_PERIOD / 100;
-    long yaw_pwm = (long)yawrate * PWM_PERIOD / 100;
+    long speed_pwm = (long) speed * PWM_PERIOD / 100;
+    long yaw_pwm = (long) yawrate * PWM_PERIOD / 100;
 
     // 2. Mix the speed and yaw signals to get individual motor PWMs
     // For an anti-clockwise (positive yaw) turn, we want the right motor to go faster
@@ -107,12 +109,13 @@ void control_motors(int speed, int yawrate) {
     } else if (right_pwm_final < -PWM_PERIOD) {
         right_pwm_final = -PWM_PERIOD;
     }
-    
+
     // 4. Call the low-level motor control function with the calculated PWM values
     set_motor_pwm(left_pwm_final, right_pwm_final);
 }
 
 // Stop both motors by setting PWM to 0
+
 void stop_motors(void) {
     set_motor_pwm(0, 0);
 }

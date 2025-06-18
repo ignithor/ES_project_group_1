@@ -5,6 +5,7 @@
  * Created on June 9, 2025, 5:32 PM
  */
 
+#include <stdio.h>
 #include <math.h>
 #include "xc.h"
 #include "interrupt.h"
@@ -13,8 +14,6 @@
 #include "timer.h"
 #include "uart.h"
 #include "adc.h"
-#include <stdio.h>
-
 
 // State definitions
 #define STATE_WAIT_FOR_START 0
@@ -29,10 +28,8 @@ int is_pwm_on; // Flag for PWM generation status
 volatile int g_speed = 0;
 volatile int g_yawrate = 0;
 
-
 extern volatile char rxBuffer[RX_BUFFER_SIZE];
 extern volatile uint8_t rxStringReady;
-
 
 // LED pin definition.
 #define LED1 LATAbits.LATA0
@@ -65,7 +62,7 @@ int main(void) {
     TURN_R = 0;
 
     float distance = 0.0; // Variable to store distance from IR sensor
-    float distance_threshold = 0.3; // Distance threshold for emergency state (30cm)
+    float distance_threshold = 0.2; // Distance threshold for emergency state (15cm)
 
     // Initialize states
     current_state = STATE_WAIT_FOR_START;
@@ -85,6 +82,7 @@ int main(void) {
     int tmr_counter_led = 0;
     int tmr_counter_side_leds = 0;
     int tmr_counter_emergency = 0;
+    int tmr_counter_send_distance = 0;
     int tmr_counter_accelerometer = 0;
     int tmr_counter_uart = 0;
 
@@ -97,12 +95,12 @@ int main(void) {
 
     while (1) {
         if (rxStringReady) {
-        // A command is ready. Call the processor function.
-        process_uart_command((const char *)rxBuffer);
-        // CRITICAL: Clear the flag so we don't process the same command again.
-        rxStringReady = 0; // it will be setted later if we recieve another command from uart
+            // A command is ready. Call the processor function.
+            process_uart_command((const char *) rxBuffer);
+            // CRITICAL: Clear the flag so we don't process the same command again.
+            rxStringReady = 0; // it will be setted later if we recieve another command from uart
         }
-        
+
         // Handle LED blinking (1000ms period)
         if (tmr_counter_led == 500) {
             LED1 = !LED1;
@@ -111,6 +109,13 @@ int main(void) {
 
         distance = adc_distance(); // Read distance from ADC
 
+        if (tmr_counter_send_distance == 100) { // Send distance every 100ms
+            char distance_message[TX_BUFFER_SIZE];
+            sprintf(distance_message, "$MDIST,%d*", average_distance());
+            UART_SendString(distance_message);
+            tmr_counter_send_distance = 0; // Reset send distance counter
+        }
+
         if (current_state == STATE_MOVING) {
             if (distance < distance_threshold) {
                 UART_SendString("$MEMRG,1*");
@@ -118,9 +123,7 @@ int main(void) {
                 tmr_counter_emergency = 0; // Reset emergency counter
                 current_state = STATE_EMERGENCY;
                 stop_motors();
-            }
-            else
-            {
+            } else {
                 control_motors(g_speed, g_yawrate);
             }
         }
@@ -170,9 +173,10 @@ int main(void) {
 
         // Maintain precise 500Hz loop timing
         tmr_wait_period(TIMER1); // Wait for timer period completion
-        
+
         // Update timing counters (increment by 2ms)
-        tmr_counter_led += 2; 
+        tmr_counter_send_distance += 2;
+        tmr_counter_led += 2;
         tmr_counter_accelerometer += 2;
         tmr_counter_uart += 2;
     }
