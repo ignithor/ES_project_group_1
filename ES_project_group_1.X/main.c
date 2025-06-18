@@ -151,7 +151,7 @@ int main(void) {
         }
 
         // Acquire accelerometer data at 10Hz (every 100ms)
-        if (tmr_counter_accelerometer = 100) {
+        if (tmr_counter_accelerometer == 100) {
             tmr_counter_accelerometer = 0; // Reset accelerometer counter
             acquire_accelerometer_data();
         }
