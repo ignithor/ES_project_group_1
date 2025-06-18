@@ -1,6 +1,13 @@
 #include <xc.h>
 #include "interrupt.h"
 
+typedef enum {
+    STATE_WAIT_FOR_START = 0,
+    STATE_MOVING,
+    STATE_EMERGENCY
+} RobotState;
+
+extern volatile RobotState current_state;
 
 // Initialize all interrupts
 

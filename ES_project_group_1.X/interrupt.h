@@ -5,13 +5,7 @@
 #include "timer.h"
 #include "xc.h"
 
-// State definitions
-#define STATE_WAIT_FOR_START 0
-#define STATE_MOVING 1
-#define STATE_EMERGENCY 2
-
 // External state variables
-extern int current_state;
 extern int is_pwm_on;
 
 // Interrupt handler declarations

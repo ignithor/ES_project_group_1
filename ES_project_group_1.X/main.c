@@ -16,13 +16,15 @@
 #include "uart.h"
 #include "adc.h"
 
-// State definitions
-#define STATE_WAIT_FOR_START 0
-#define STATE_MOVING         1
-#define STATE_EMERGENCY      2
+typedef enum {
+    STATE_WAIT_FOR_START = 0,
+    STATE_MOVING,
+    STATE_EMERGENCY
+} RobotState;
+
+volatile RobotState current_state;
 
 // State flags
-int current_state; // Current state of the robot
 int is_pwm_on; // Flag for PWM generation status
 
 // 'volatile' is used because these are modified by UART and read by main loop

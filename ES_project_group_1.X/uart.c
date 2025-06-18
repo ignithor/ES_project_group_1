@@ -3,7 +3,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "uart.h"
-#include "interrupt.h"
+#include "pwm.h"
+typedef enum {
+    STATE_WAIT_FOR_START = 0,
+    STATE_MOVING,
+    STATE_EMERGENCY
+} RobotState;
+
+extern volatile RobotState current_state;
 
 // TX Circular Buffer
 static volatile char tx_buffer[TX_BUFFER_SIZE];
