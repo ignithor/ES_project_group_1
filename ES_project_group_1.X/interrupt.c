@@ -3,19 +3,21 @@
 
 
 // Initialize all interrupts
+
 void init_interrupts(void) {
     // Set pin as input
     TRISEbits.TRISE8 = 1; // T2 button set as input
     TRISEbits.TRISE9 = 1; // T3 button set as input
 
     // Configure INT1 interrupt for button input
-    RPINR0bits.INT1R = 0x58;    // Map INT1 to RPI88 (RE8)
-    INTCON2bits.GIE = 1;        // Enable global interrupts
-    IFS1bits.INT1IF = 0;        // Clear interrupt flag
-    IEC1bits.INT1IE = 1;        // Enable INT1 interrupt
+    RPINR0bits.INT1R = 0x58; // Map INT1 to RPI88 (RE8)
+    INTCON2bits.GIE = 1; // Enable global interrupts
+    IFS1bits.INT1IF = 0; // Clear interrupt flag
+    IEC1bits.INT1IE = 1; // Enable INT1 interrupt
 }
 
 // Interrupt routine for pressed button
+
 void __attribute__((__interrupt__, __auto_psv__)) _INT1Interrupt(void) {
     // Clear interrupt flag and disable interrupt during processing
     IFS1bits.INT1IF = 0;
@@ -27,7 +29,7 @@ void __attribute__((__interrupt__, __auto_psv__)) _INT1Interrupt(void) {
                 // Transition to Moving state
                 current_state = STATE_MOVING;
                 // Start motors at 50% duty cycle
-                set_motor_pwm(PWM_PERIOD/2, PWM_PERIOD/2);
+                set_motor_pwm(PWM_PERIOD / 2, PWM_PERIOD / 2);
                 break;
 
             case STATE_MOVING:
@@ -50,6 +52,7 @@ void __attribute__((__interrupt__, __auto_psv__)) _INT1Interrupt(void) {
 }
 
 // Debouncing using two interrupts
+
 void __attribute__((__interrupt__, __auto_psv__)) _T2Interrupt(void) {
     // Clear timer interrupt flag
     IFS0bits.T2IF = 0;

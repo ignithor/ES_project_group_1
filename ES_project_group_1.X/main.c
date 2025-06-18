@@ -5,7 +5,7 @@
  * Created on June 9, 2025, 5:32 PM
  */
 
- #include <stdio.h>
+#include <stdio.h>
 #include <math.h>
 #include "xc.h"
 #include "interrupt.h"
@@ -95,12 +95,12 @@ int main(void) {
 
     while (1) {
         if (rxStringReady) {
-        // A command is ready. Call the processor function.
-        process_uart_command((const char *)rxBuffer);
-        // CRITICAL: Clear the flag so we don't process the same command again.
-        rxStringReady = 0; // it will be setted later if we recieve another command from uart
+            // A command is ready. Call the processor function.
+            process_uart_command((const char *) rxBuffer);
+            // CRITICAL: Clear the flag so we don't process the same command again.
+            rxStringReady = 0; // it will be setted later if we recieve another command from uart
         }
-        
+
         // Handle LED blinking (1000ms period)
         if (tmr_counter_led == 500) {
             LED1 = !LED1;
@@ -123,9 +123,7 @@ int main(void) {
                 tmr_counter_emergency = 0; // Reset emergency counter
                 current_state = STATE_EMERGENCY;
                 stop_motors();
-            }
-            else
-            {
+            } else {
                 control_motors(g_speed, g_yawrate);
             }
         }
@@ -175,10 +173,10 @@ int main(void) {
 
         // Maintain precise 500Hz loop timing
         tmr_wait_period(TIMER1); // Wait for timer period completion
-        
+
         // Update timing counters (increment by 2ms)
-        tmr_counter_send_distance += 2; 
-        tmr_counter_led += 2; 
+        tmr_counter_send_distance += 2;
+        tmr_counter_led += 2;
         tmr_counter_accelerometer += 2;
         tmr_counter_uart += 2;
     }
