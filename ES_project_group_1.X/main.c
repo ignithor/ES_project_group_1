@@ -64,7 +64,7 @@ int main(void) {
     TURN_R = 0;
 
     float distance = 0.0; // Variable to store distance from IR sensor
-    float distance_threshold = 0.2; // Distance threshold for emergency state (15cm)
+    float distance_threshold = 0.2; // Distance threshold for emergency state (20cm)
 
     // Initialize states
     current_state = STATE_WAIT_FOR_START;
@@ -97,7 +97,6 @@ int main(void) {
 
     // Configure accelerometer
     accelerometer_config();
-    char acc_message[32]; // Buffer for ACC message
 
     while (1) {
         // Process all pending commands
@@ -106,7 +105,7 @@ int main(void) {
             rx_read_index = (rx_read_index + 1) % RX_BUFFER_COUNT;
         }
 
-        // Handle LED blinking (1000ms period)
+        // Handle LED blinking at 1Hz
         if (tmr_counter_led == 500) {
             LED1 = !LED1;
             tmr_counter_led = 0;
@@ -115,7 +114,7 @@ int main(void) {
         distance = adc_distance(); // Read distance from ADC
 
         if (tmr_counter_send_distance == 100) { // Send distance every 100ms
-            char distance_message[TX_BUFFER_SIZE];
+            char distance_message[RX_STRING_LENGTH];
             sprintf(distance_message, "$MDIST,%d*\r\n", average_distance());
             UART_SendString(distance_message);
             tmr_counter_send_distance = 0; // Reset send distance counter
@@ -130,7 +129,7 @@ int main(void) {
         // Send battery voltage at 1Hz (every 1000ms)
         if (tmr_counter_battery == 1000) {
             double avg_battery_voltage = average_battery_voltage();
-            char bat_message[20];
+            char bat_message[RX_STRING_LENGTH];
             sprintf(bat_message, "$MBATT,%.2f*\r\n", avg_battery_voltage);
             UART_SendString(bat_message);
             tmr_counter_battery = 0;
@@ -182,7 +181,7 @@ int main(void) {
             int x_acc = filter_accelerometer(x_values_acc, ARRAY_SIZE, 'x');
             int y_acc = filter_accelerometer(y_values_acc, ARRAY_SIZE, 'y');
             int z_acc = filter_accelerometer(z_values_acc, ARRAY_SIZE, 'z');
-
+            char acc_message[RX_STRING_LENGTH]; // Buffer for ACC message
             sprintf(acc_message, "$MACC,%d,%d,%d*\r\n", x_acc, y_acc, z_acc);
             UART_SendString(acc_message);
             tmr_counter_uart = 0;
