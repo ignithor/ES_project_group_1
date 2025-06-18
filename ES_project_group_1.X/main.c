@@ -118,11 +118,11 @@ int main(void) {
             tmr_counter_send_distance = 0; // Reset send distance counter
         }
 
-        // Send battery voltage every 1 second (500 * 2ms = 1000ms)
-        if (tmr_counter_battery == 500) {
+        // Acquire battery voltage at 1Hz (every 1000ms)
+        if (tmr_counter_battery == 1000) {
             double battery_voltage = adc_battery_voltage();
             char bat_message[20];
-            sprintf(bat_message, "$MBATT,%.2f*", battery_voltage);
+            sprintf(bat_message, "$MBATT,%.2f*\r\n", battery_voltage);
             UART_SendString(bat_message);
             tmr_counter_battery = 0;
         }
