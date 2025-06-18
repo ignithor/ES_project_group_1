@@ -29,8 +29,11 @@ int is_pwm_on; // Flag for PWM generation status
 volatile int g_speed = 0;
 volatile int g_yawrate = 0;
 
-extern volatile char rxBuffer[RX_BUFFER_SIZE];
-extern volatile uint8_t rxStringReady;
+
+// Command buffer externals
+extern volatile char rxBuffer[RX_BUFFER_COUNT][RX_STRING_LENGTH];
+extern volatile uint8_t rx_write_index;
+extern volatile uint8_t rx_read_index;
 
 // LED pin definition.
 #define LED1 LATAbits.LATA0
@@ -96,13 +99,12 @@ int main(void) {
     char acc_message[32]; // Buffer for ACC message
 
     while (1) {
-        if (rxStringReady) {
-        // A command is ready. Call the processor function.
-        process_uart_command((const char *) rxBuffer);
-        // CRITICAL: Clear the flag so we don't process the same command again.
-        rxStringReady = 0; // it will be setted later if we recieve another command from uart
+        // Process all pending commands
+        while (rx_read_index != rx_write_index) {
+            process_uart_command((const char *) rxBuffer[rx_read_index]);
+            rx_read_index = (rx_read_index + 1) % RX_BUFFER_COUNT;
         }
-        
+
         // Handle LED blinking (1000ms period)
         if (tmr_counter_led == 500) {
             LED1 = !LED1;
