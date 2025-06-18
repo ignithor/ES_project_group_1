@@ -29,7 +29,6 @@ int is_pwm_on; // Flag for PWM generation status
 volatile int g_speed = 0;
 volatile int g_yawrate = 0;
 
-
 // Command buffer externals
 extern volatile char rxBuffer[RX_BUFFER_COUNT][RX_STRING_LENGTH];
 extern volatile uint8_t rx_write_index;
@@ -37,7 +36,6 @@ extern volatile uint8_t rx_read_index;
 
 // LED pin definition.
 #define LED1 LATAbits.LATA0
-#define LED2 LATGbits.LATG9
 
 // Define TURN signal pins
 #define TURN_L LATFbits.LATF1
@@ -51,10 +49,8 @@ int main(void) {
     // Disable all analog functionality on pins to use them as digital I/O
     ANSELA = ANSELB = ANSELC = ANSELD = ANSELE = ANSELG = 0x0000;
 
-    // Initialize pins
+    // Initialize LEDS pins
     TRISAbits.TRISA0 = 0; // pin A0 set as output (LED1)
-    TRISGbits.TRISG9 = 0; // pin G9 set as output (LED2)
-
     TRISFbits.TRISF1 = 0; // Left LED
     TRISBbits.TRISB8 = 0; // Right LED
 
@@ -82,7 +78,9 @@ int main(void) {
     // Configure system timers
     tmr_setup_period(TIMER1, 2); // TIMER1: 500Hz main loop timing (2ms)
     tmr_setup_period(TIMER2, 20); // TIMER2: Used for button debouncing
+
     LED1 = 1; // LED initially on
+
     int tmr_counter_led = 0;
     int tmr_counter_side_leds = 0;
     int tmr_counter_emergency = 0;
@@ -132,7 +130,6 @@ int main(void) {
         if (current_state == STATE_MOVING) {
             if (distance < distance_threshold) {
                 UART_SendString("$MEMRG,1* \r\n");
-                LATGbits.LATG9 = 1; // DEBUG
                 tmr_counter_emergency = 0; // Reset emergency counter
                 current_state = STATE_EMERGENCY;
                 stop_motors();
@@ -149,10 +146,8 @@ int main(void) {
                 tmr_counter_side_leds = 0; // Reset side LED counter
             }
             if (distance < distance_threshold) {
-                LATGbits.LATG9 = 1; // DEBUG
                 tmr_counter_emergency = 0; // Reset emergency counter
             } else {
-                LATGbits.LATG9 = 0;
                 tmr_counter_emergency += 2; // Increment emergency counter by 2ms
                 if (tmr_counter_emergency == 5000) { // If 5000ms passed in emergency state
                     current_state = STATE_WAIT_FOR_START; // Reset to wait for start state

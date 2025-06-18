@@ -42,8 +42,8 @@ float adc_distance(void) {
     
     // Convert the result to distance
     float voltage = (float) ADC_value * 3.3 / 1023;
-    // float voltage = (float)ADC_value * 3.3 / 4095;
-
+    
+    // Polynomial approximation for distance based on voltage
     float distance = 2.34 - 4.74 * voltage + 4.06 * pow(voltage, 2) - 1.60 * pow(voltage, 3) + 0.24 * pow(voltage, 4);
     
     // Store in circular buffer
