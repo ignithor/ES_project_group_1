@@ -5,6 +5,7 @@
  * Created on June 9, 2025, 5:32 PM
  */
 
+#include <stdint.h>
 #include <stdio.h>
 #include <math.h>
 #include "xc.h"
@@ -98,6 +99,7 @@ int main(void) {
     int tmr_counter_send_distance = 0;
     int tmr_counter_accelerometer = 0;
     int tmr_counter_uart = 0;
+    int tmr_counter_battery = 0;
 
     // Configure SPI
     spi_setup();
@@ -112,7 +114,7 @@ int main(void) {
             process_uart_command((const char *)rxBuffer[rx_read_index]);
             rx_read_index = (rx_read_index + 1) % RX_BUFFER_COUNT;
         }
-
+        
         // Handle LED blinking (1000ms period)
         if (tmr_counter_led == 500) {
             LED1 = !LED1;
@@ -123,14 +125,23 @@ int main(void) {
 
         if (tmr_counter_send_distance == 100) { // Send distance every 100ms
             char distance_message[TX_BUFFER_SIZE];
-            sprintf(distance_message, "$MDIST,%d*", average_distance());
+            sprintf(distance_message, "$MDIST,%d*\r\n", average_distance());
             UART_SendString(distance_message);
             tmr_counter_send_distance = 0; // Reset send distance counter
         }
 
+        // Acquire battery voltage at 1Hz (every 1000ms)
+        if (tmr_counter_battery == 1000) {
+            double battery_voltage = adc_battery_voltage();
+            char bat_message[20];
+            sprintf(bat_message, "$MBATT,%.2f*\r\n", battery_voltage);
+            UART_SendString(bat_message);
+            tmr_counter_battery = 0;
+        }
+
         if (current_state == STATE_MOVING) {
             if (distance < distance_threshold) {
-                UART_SendString("$MEMRG,1*");
+                UART_SendString("$MEMRG,1* \r\n");
                 LATGbits.LATG9 = 1; // DEBUG
                 tmr_counter_emergency = 0; // Reset emergency counter
                 current_state = STATE_EMERGENCY;
@@ -159,14 +170,14 @@ int main(void) {
                     TURN_L = 0; // Turn off left turn signal
                     TURN_R = 0; // Turn off right turn signal
                     tmr_counter_side_leds = 0; // Reset side LED counter
-                    UART_SendString("$MEMRG,0");
+                    UART_SendString("$MEMRG,0 \r\n");
                 }
 
             }
         }
 
         // Acquire accelerometer data at 10Hz (every 100ms)
-        if (tmr_counter_accelerometer = 100) {
+        if (tmr_counter_accelerometer == 100) {
             tmr_counter_accelerometer = 0; // Reset accelerometer counter
             acquire_accelerometer_data();
         }
@@ -191,6 +202,7 @@ int main(void) {
         tmr_counter_led += 2;
         tmr_counter_accelerometer += 2;
         tmr_counter_uart += 2;
+        tmr_counter_battery += 2;
     }
     return 0;
 }

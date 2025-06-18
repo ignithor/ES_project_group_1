@@ -9,6 +9,7 @@
 void setup_adc();
 float adc_distance(void);
 int average_distance(void);
+float adc_battery_voltage(void);
 
 #endif	/* XC_HEADER_TEMPLATE_H */
 
