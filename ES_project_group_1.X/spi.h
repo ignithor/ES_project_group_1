@@ -4,18 +4,14 @@
 #include <xc.h>
 #include <math.h>
 
-// Define buffer size for accelerometer data (using the last 5 measurements)
-#define ARRAY_SIZE 5
+// Define the accelerometer chip selector
 #define ACC_CS LATBbits.LATB3
 
 // Extern declarations for accelerometer data buffers. These arrays store the most recent
 // measurements for the x, y, and z axes respectively.
-extern int x_values_acc[ARRAY_SIZE];
-extern int y_values_acc[ARRAY_SIZE];
-extern int z_values_acc[ARRAY_SIZE];
-
-// Global index used for circular buffer management for accelerometer data
-extern int array_index;
+extern int x_values_acc;
+extern int y_values_acc;
+extern int z_values_acc;
 
 /**
  * @brief Initialize the SPI peripheral.
@@ -46,6 +42,6 @@ void acquire_accelerometer_data(void);
  * @return double The computed average.
  */
 // double calculate_average(int values[], int size);
-int filter_accelerometer(int values[], int size, char axis);
+int filter_accelerometer(int values, char axis);
 
 #endif // SPI_H

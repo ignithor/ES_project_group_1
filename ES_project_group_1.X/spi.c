@@ -1,10 +1,9 @@
 #include "spi.h"
 
 // Global variable definitions for accelerometer sensor data storage
-int x_values_acc[ARRAY_SIZE]; // X-axis accelerometer readings buffer
-int y_values_acc[ARRAY_SIZE]; // Y-axis accelerometer readings buffer
-int z_values_acc[ARRAY_SIZE]; // Z-axis accelerometer readings buffer
-int array_index_acc = 0; // Current position in circular buffer
+int x_values_acc; // X-axis accelerometer 
+int y_values_acc; // Y-axis accelerometer 
+int z_values_acc; // Z-axis accelerometer
 
 /**
  * @brief Transmits and receives a byte via SPI
@@ -94,27 +93,24 @@ void acquire_accelerometer_data(void) {
     uint8_t x_MSB_byte = spi_write(0x03); // Read X-MSB register
     // Process X-axis data: 13-bit value, discard lower 3 bits
     int x_value = ((x_MSB_byte << 8) | (x_LSB_byte & 0xF8)) >> 3;
-    x_values_acc[array_index_acc] = x_value;
+    x_values_acc = x_value;
 
     // Acquire Y-axis accelerometer data
     uint8_t y_LSB_byte = spi_write(0x04); // Read Y-LSB register
     uint8_t y_MSB_byte = spi_write(0x05); // Read Y-MSB register
     // Process Y-axis data: 13-bit value, discard lower 3 bits
     int y_value = ((y_MSB_byte << 8) | (y_LSB_byte & 0xF8)) >> 3;
-    y_values_acc[array_index_acc] = y_value;
+    y_values_acc = y_value;
 
     // Acquire Z-axis accelerometer data
     uint8_t z_LSB_byte = spi_write(0x06); // Read Z-LSB register
     uint8_t z_MSB_byte = spi_write(0x07); // Read Z-MSB register
     // Process Z-axis data: 13-bit value, discard lower 3 bits
     int z_value = ((z_MSB_byte << 8) | (z_LSB_byte & 0xF8)) >> 3;
-    z_values_acc[array_index_acc] = z_value;
+    z_values_acc = z_value;
 
     // End SPI transaction
     ACC_CS = 1; // Disable chip select
-
-    // Update circular buffer index for next reading
-    array_index_acc = (array_index_acc + 1) % ARRAY_SIZE;
 }
 
 /**
@@ -127,7 +123,7 @@ void acquire_accelerometer_data(void) {
  * @param size Number of elements in the array
  * @return integer of the arithmetic mean of the values
  */
-int filter_accelerometer(int values[], int size, char axis) {
+int filter_accelerometer(int values, char axis) {
     int bias = 0;
     // Set the accelerometer offset for each axis when "wait for start" state
     switch (axis) {
@@ -141,15 +137,15 @@ int filter_accelerometer(int values[], int size, char axis) {
             break;
     }
 
-    // Calculate sum of all values in array
-    int sum = 0;
-    for (int i = 0; i < size; i++) {
-        sum += values[i];
-    }
-    double raw_average = (double) sum / size;
+    // // Calculate sum of all values in array
+    // int sum = 0;
+    // for (int i = 0; i < size; i++) {
+    //     sum += values[i];
+    // }
+    // double raw_average = (double) sum / size;
 
     // Convert raw average to acceleration in [mg]
-    int acc_in_mg = (int) round(0.977 * raw_average);
+    int acc_in_mg = (int) round(0.977 * values);
 
     // Return average value after bias correction
     return acc_in_mg - bias;
