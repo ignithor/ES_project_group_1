@@ -22,8 +22,8 @@
 #define STATE_EMERGENCY      2
 
 // State flags
-int current_state;
-int is_pwm_on;
+int current_state; // Current state of the robot
+int is_pwm_on; // Flag for PWM generation status
 
 // 'volatile' is used because these are modified by UART and read by main loop
 volatile int g_speed = 0;
@@ -46,16 +46,6 @@ extern volatile uint8_t rx_read_index;
 extern int x_values_acc[ARRAY_SIZE];
 extern int y_values_acc[ARRAY_SIZE];
 extern int z_values_acc[ARRAY_SIZE];
-
-
-typedef enum {
-    CMD_PCREF,
-    CMD_PCSTP,
-    CMD_PCSTT,
-    CMD_UNKNOWN
-} CommandType;
-
-
 
 int main(void) {
     // Disable all analog functionality on pins to use them as digital I/O
@@ -111,10 +101,10 @@ int main(void) {
     while (1) {
         // Process all pending commands
         while (rx_read_index != rx_write_index) {
-            process_uart_command((const char *)rxBuffer[rx_read_index]);
+            process_uart_command((const char *) rxBuffer[rx_read_index]);
             rx_read_index = (rx_read_index + 1) % RX_BUFFER_COUNT;
         }
-        
+
         // Handle LED blinking (1000ms period)
         if (tmr_counter_led == 500) {
             LED1 = !LED1;
