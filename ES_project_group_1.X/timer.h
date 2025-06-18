@@ -4,44 +4,35 @@
 #include <xc.h> // Include processor files
 
 // Timer usage definitions:
-// TIMER1: Main loop period management at 100Hz.
-// TIMER2: Busy wait for 7ms within algorithm execution.
+// TIMER1: Main loop period management at 500 Hz.
+// TIMER2: Used to process bouncing in interrupt routine for pressed button.
 #define TIMER1 1
 #define TIMER2 2
 
 // Define System Clock Frequency used for timer calculations.
 #define FCY 72000000
 
-// Function Prototypes:
 
 /**
- * @brief Configure the specified timer period.
+ * @brief Configure a timer for a specified period
  * 
- * Sets up the timer to generate a period flag after a specified duration in milliseconds.
- *
- * @param timer Timer identifier (TIMER1, TIMER2).
- * @param ms Time period in milliseconds.
+ * Sets up the selected timer with appropriate prescaler and period register
+ * values to generate timing events at the specified millisecond interval.
+ * 
+ * @param timer Timer identifier (TIMER1, TIMER2)
+ * @param ms Desired period in milliseconds
  */
 void tmr_setup_period(int timer, int ms);
 
 /**
- * @brief Wait until the specified timer period is complete.
+ * @brief Wait for a timer period to complete
  * 
- * Blocks the execution until the timer flag indicates the period is finished.
- *
- * @param timer Timer identifier.
+ * Blocks execution until the specified timer's period has elapsed (flag set)
+ * then clears the flag for the next period.
+ * 
+ * @param timer Timer identifier (TIMER1 or TIMER2)
  */
 void tmr_wait_period(int timer);
-
-/**
- * @brief Busy wait for a specified duration.
- * 
- * Uses the selected timer to perform a busy wait for the given number of milliseconds.
- *
- * @param timer Timer identifier.
- * @param ms Number of milliseconds to wait.
- */
-void tmr_wait_ms(int timer, int ms);
 
 #ifdef __cplusplus
 extern "C" {
