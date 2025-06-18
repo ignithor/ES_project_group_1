@@ -108,7 +108,7 @@ void process_uart_command(const char *input) {
             break;
 
         case CMD_PCSTT:
-            if (current_state =! STATE_EMERGENCY) {
+            if (current_state != STATE_EMERGENCY) {
                 current_state = STATE_MOVING;
                 UART_SendString("$MACK,1*\r\n");
             } else {
