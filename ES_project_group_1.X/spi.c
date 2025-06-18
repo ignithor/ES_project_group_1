@@ -34,9 +34,6 @@ int spi_write(int addr) {
  * for interfacing with the sensor modules.
  */
 void spi_setup(void) {
-//    // Configure chip select pins for the magnetometer
-//    TRISDbits.TRISD6 = 0;   // CS3: Magnetometer set as output
-//    LATDbits.LATD6 = 1;     // Initialize CS high (inactive)
 
     // Configure chip select pins for the accelerometer
     TRISBbits.TRISB3 = 0;   // CS1: accelerometer set as output

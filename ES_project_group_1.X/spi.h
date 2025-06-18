@@ -3,19 +3,18 @@
 
 #include <xc.h>
 #include <math.h>
-#include "timer.h"
 
-// Define buffer size for magnetometer data (using the last 5 measurements)
+// Define buffer size for accelerometer data (using the last 5 measurements)
 #define ARRAY_SIZE 5
 #define ACC_CS LATBbits.LATB3
 
-// Extern declarations for magnetometer data buffers. These arrays store the most recent
+// Extern declarations for accelerometer data buffers. These arrays store the most recent
 // measurements for the x, y, and z axes respectively.
 extern int x_values_acc[ARRAY_SIZE];
 extern int y_values_acc[ARRAY_SIZE];
 extern int z_values_acc[ARRAY_SIZE];
 
-// Global index used for circular buffer management for magnetometer data
+// Global index used for circular buffer management for accelerometer data
 extern int array_index;
 
 /**
@@ -34,21 +33,6 @@ void spi_setup(void);
  * @return int The byte received via SPI.
  */
 int spi_write(int addr);
-
-/**
- * @brief Configure the magnetometer.
- * 
- * Sets the magnetometer to active mode and configures the data rate to 25Hz.
- */
-//void magnetometer_config(void);
-
-/**
- * @brief Acquire data from the magnetometer.
- * 
- * Reads magnetic data from the sensor registers and stores them in the corresponding buffers.
- */
-//void acquire_magnetometer_data(void);
-
 void accelerometer_config(void);
 void acquire_accelerometer_data(void);
 
