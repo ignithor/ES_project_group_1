@@ -5,6 +5,7 @@
  * Created on June 9, 2025, 5:32 PM
  */
 
+ #include <stdio.h>
 #include <math.h>
 #include "xc.h"
 #include "interrupt.h"
@@ -13,9 +14,6 @@
 #include "timer.h"
 #include "uart.h"
 #include "adc.h"
-#include <stdio.h>
-
-
 
 // State definitions
 #define STATE_WAIT_FOR_START 0
@@ -30,22 +28,22 @@ int is_pwm_on; // Flag for PWM generation status
 volatile int g_speed = 0;
 volatile int g_yawrate = 0;
 
-
 extern volatile char rxBuffer[RX_BUFFER_SIZE];
 extern volatile uint8_t rxStringReady;
 
-
 // LED pin definition.
 #define LED1 LATAbits.LATA0
-
 #define LED2 LATGbits.LATG9
 
 // Define TURN signal pins
 #define TURN_L LATFbits.LATF1
 #define TURN_R LATBbits.LATB8
 
-int main(void) {
+extern int x_values_acc[ARRAY_SIZE];
+extern int y_values_acc[ARRAY_SIZE];
+extern int z_values_acc[ARRAY_SIZE];
 
+int main(void) {
     // Disable all analog functionality on pins to use them as digital I/O
     ANSELA = ANSELB = ANSELC = ANSELD = ANSELE = ANSELG = 0x0000;
 
@@ -85,6 +83,15 @@ int main(void) {
     int tmr_counter_side_leds = 0;
     int tmr_counter_emergency = 0;
     int tmr_counter_send_distance = 0;
+    int tmr_counter_accelerometer = 0;
+    int tmr_counter_uart = 0;
+
+    // Configure SPI
+    spi_setup();
+
+    // Configure accelerometer
+    accelerometer_config();
+    char acc_message[32]; // Buffer for ACC message
 
     while (1) {
         if (rxStringReady) {
@@ -148,13 +155,32 @@ int main(void) {
             }
         }
 
-        // Update timing counters
-        tmr_counter_send_distance += 2; // Increment by 2ms
-        tmr_counter_led += 2; // Increment by 2ms
+        // Acquire accelerometer data at 10Hz (every 100ms)
+        if (tmr_counter_accelerometer = 100) {
+            tmr_counter_accelerometer = 0; // Reset accelerometer counter
+            acquire_accelerometer_data();
+        }
 
-        // Wait for next timer period
-        tmr_wait_period(TIMER1);
+        // Process and transmit ACC data at configurable rate (10 Hz)
+        if (tmr_counter_uart == 100) {
+            // Filter accelerometer value
+            int x_acc = filter_accelerometer(x_values_acc, ARRAY_SIZE, 'x');
+            int y_acc = filter_accelerometer(y_values_acc, ARRAY_SIZE, 'y');
+            int z_acc = filter_accelerometer(z_values_acc, ARRAY_SIZE, 'z');
+
+            sprintf(acc_message, "$MACC,%d,%d,%d*\r\n", x_acc, y_acc, z_acc);
+            UART_SendString(acc_message);
+            tmr_counter_uart = 0;
+        }
+
+        // Maintain precise 500Hz loop timing
+        tmr_wait_period(TIMER1); // Wait for timer period completion
+        
+        // Update timing counters (increment by 2ms)
+        tmr_counter_send_distance += 2; 
+        tmr_counter_led += 2; 
+        tmr_counter_accelerometer += 2;
+        tmr_counter_uart += 2;
     }
-
     return 0;
 }
