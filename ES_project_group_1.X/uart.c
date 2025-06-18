@@ -28,6 +28,13 @@ extern volatile int g_speed;
 extern volatile int g_yawrate;
 extern int current_state; 
 
+typedef enum {
+    CMD_PCREF,
+    CMD_PCSTP,
+    CMD_PCSTT,
+    CMD_UNKNOWN
+} CommandType;
+
 // --- Public Functions ---
 
 void UART_Initialize(void) {
@@ -78,27 +85,41 @@ void UART_SendString(const char *str) {
     }
 }
 
+static CommandType get_command_type(const char *input) {
+    if (strncmp(input, "$PCREF,", 7) == 0) return CMD_PCREF;
+    if (strncmp(input, "$PCSTP,", 7) == 0) return CMD_PCSTP;
+    if (strncmp(input, "$PCSTT,", 7) == 0) return CMD_PCSTT;
+    return CMD_UNKNOWN;
+}
+
 void process_uart_command(const char *input) {
-    // Check if the command is for motor control
-    if (strncmp(input, "$PCREF,", 7) == 0) {
-        process_pcref_command(input);
-    }
-    else if (strncmp(input, "$PCSTP,", 7) == 0) {
-        if (current_state = !STATE_EMERGENCY) {
-            current_state = STATE_WAIT_FOR_START;
-            UART_SendString("$MACK,1*\r\n");
-        }
-     else {
-        UART_SendString("$MACK,0*\r\n");
-    }} else if (strncmp(input, "$PCSTT,", 7) == 0) {
-        if (!STATE_EMERGENCY) {
-            current_state = STATE_MOVING;
-            UART_SendString("$MACK,1*\r\n");
-        } else {
-            UART_SendString("$MACK,0*\r\n");
-        }
-    } else {
-        UART_SendString("$ERR,Unknown command*\r\n");
+    switch (get_command_type(input)) {
+        case CMD_PCREF:
+            process_pcref_command(input);
+            break;
+
+        case CMD_PCSTP:
+            if (current_state != STATE_EMERGENCY) {
+                current_state = STATE_WAIT_FOR_START;
+                UART_SendString("$MACK,1*\r\n");
+            } else {
+                UART_SendString("$MACK,0*\r\n");
+            }
+            break;
+
+        case CMD_PCSTT:
+            if (!STATE_EMERGENCY) {
+                current_state = STATE_MOVING;
+                UART_SendString("$MACK,1*\r\n");
+            } else {
+                UART_SendString("$MACK,0*\r\n");
+            }
+            break;
+
+        case CMD_UNKNOWN:
+        default:
+            UART_SendString("$ERR,Unknown command*\r\n");
+            break;
     }
 }
 
