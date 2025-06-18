@@ -21,4 +21,7 @@ void set_motor_pwm(int left_pwm, int right_pwm);
 // Stop both motors by setting PWM to 0
 void stop_motors();
 
+//control motors by sending values between -100 and 100
+void control_motors(int speed, int yawrate);
+
 #endif /* PWM_H */

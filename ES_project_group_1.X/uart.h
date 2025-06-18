@@ -34,4 +34,7 @@ void UART_SendString(const char *str);
  */
 void process_uart_command(const char *input);
 
+//function to check and parse pcref command
+void process_pcref_command(const char *command);
+
 #endif	/* XC_HEADER_UART_H */

@@ -79,7 +79,41 @@ void set_motor_pwm(int left_pwm, int right_pwm) {
     }
 }
 
+
+
+void control_motors(int speed, int yawrate) {
+    // 1. Map speed and yawrate from [-100, 100] to [-PWM_PERIOD, PWM_PERIOD]
+    long speed_pwm = (long)speed * PWM_PERIOD / 100;
+    long yaw_pwm = (long)yawrate * PWM_PERIOD / 100;
+
+    // 2. Mix the speed and yaw signals to get individual motor PWMs
+    // For an anti-clockwise (positive yaw) turn, we want the right motor to go faster
+    // and the left motor to go slower.
+    long left_pwm_raw = speed_pwm - yaw_pwm;
+    long right_pwm_raw = speed_pwm + yaw_pwm;
+
+    // 3. check PWM values to the valid range [-PWM_PERIOD, PWM_PERIOD] if not set it to the limit
+    // to prevent overflow and ensure proper motor driver operation.
+    int left_pwm_final = left_pwm_raw;
+    if (left_pwm_final > PWM_PERIOD) {
+        left_pwm_final = PWM_PERIOD;
+    } else if (left_pwm_final < -PWM_PERIOD) {
+        left_pwm_final = -PWM_PERIOD;
+    }
+
+    int right_pwm_final = right_pwm_raw;
+    if (right_pwm_final > PWM_PERIOD) {
+        right_pwm_final = PWM_PERIOD;
+    } else if (right_pwm_final < -PWM_PERIOD) {
+        right_pwm_final = -PWM_PERIOD;
+    }
+    
+    // 4. Call the low-level motor control function with the calculated PWM values
+    set_motor_pwm(left_pwm_final, right_pwm_final);
+}
+
 // Stop both motors by setting PWM to 0
 void stop_motors(void) {
     set_motor_pwm(0, 0);
 }
+

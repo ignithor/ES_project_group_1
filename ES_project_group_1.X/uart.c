@@ -21,8 +21,10 @@ static volatile char tx_buffer[TX_BUFFER_SIZE];
 static volatile uint16_t tx_head = 0;
 static volatile uint16_t tx_tail = 0;
 
-// Magnetometer data rate, initialized to 5 Hz as required 
-uint8_t currentRate = 5;
+
+// knows they exist in main.c
+extern volatile int g_speed;
+extern volatile int g_yawrate;
 
 // --- Public Functions ---
 
@@ -73,49 +75,37 @@ void UART_SendString(const char *str) {
     }
 }
 
-void process_rate_command(const char* rateStr) {
-    char* endptr;
-    long rate = strtol(rateStr, &endptr, 10);
-    
-    // Check if conversion was successful and string was fully parsed
-    if (*endptr != '\0' || rateStr == endptr) {
-        UART_SendString("$ERR,1*\r\n"); // Invalid number format 
-        return;
-    }
-    
-    // Check against the list of valid data rates 
-    if (rate == 0 || rate == 1 || rate == 2 || rate == 4 || rate == 5 || rate == 10) {
-        currentRate = (uint8_t)rate;
-        char msg[40];
-        sprintf(msg, "Rate set to %d Hz\r\n", currentRate);
-        UART_SendString(msg);
-    } else {
-        UART_SendString("$ERR,1*\r\n"); // Invalid rate value 
+void process_uart_command(const char *input) {
+    // Check if the command is for motor control
+    if (strncmp(input, "$PCREF,", 7) == 0) {
+        process_pcref_command(input);
+    } 
+    //
+    // in this section future commands will be added
+    //  like in this format
+    // else if (strncmp(input, "$SOME_OTHER_CMD,", 16) == 0) {
+    //     process_some_other_commandd(input from uart);
+    // }
+    //
+    else {
+        UART_SendString("$ERR,Unknown command*\r\n");
     }
 }
 
-void process_uart_command(const char *input) {
-    if (strncmp(input, "$RATE,", 6) == 0) { // Check for "$RATE,xx*" command 
-        const char *rate_start = input + 6;
-        char* asterisk = strchr(rate_start, '*');
-        
-        if (asterisk != NULL) {
-            char rateStr[10];
-            int length = asterisk - rate_start;
-            if (length > 0 && length < sizeof(rateStr)) {
-                strncpy(rateStr, rate_start, length);
-                rateStr[length] = '\0';
-                process_rate_command(rateStr);
-            } else {
-                UART_SendString("$ERR,1*\r\n"); // Malformed (e.g., $RATE,*) 
-            }
-        } else {
-            UART_SendString("$ERR,1*\r\n"); // Malformed (no asterisk) 
+
+void process_pcref_command(const char *command) {
+    int speed, yawrate;
+
+    if (sscanf(command, "$PCREF,%d,%d*", &speed, &yawrate) == 2) {
+        if ((speed >= -100 && speed <= 100) && (yawrate >= -100 && yawrate <= 100)) {
+            // Parsing successful and values are valid.
+            // Update the global variables instead of calling the motor function.
+            g_speed = speed;
+            g_yawrate = yawrate;
         }
-    } else {
-        UART_SendString("Unknown command\r\n");
     }
 }
+
 
 // --- Interrupt Service Routines (ISRs) ---
 
