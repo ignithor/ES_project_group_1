@@ -1,5 +1,5 @@
-#ifndef XC_HEADER_UART_H
-#define	XC_HEADER_UART_H
+#ifndef UART_H
+#define	UART_H
 
 #include <xc.h> 
 
@@ -21,9 +21,4 @@ void UART_SendString(const char *str);
 void process_uart_command(const char *input);
 void process_pcref_command(const char *command);
 
-/* Command Buffer Variables */
-//extern volatile char rxBuffer[RX_BUFFER_COUNT][RX_STRING_LENGTH];
-//extern volatile uint8_t rx_write_index;
-//extern volatile uint8_t rx_read_index;
-
-#endif	/* XC_HEADER_UART_H */
+#endif	/* UART_H */

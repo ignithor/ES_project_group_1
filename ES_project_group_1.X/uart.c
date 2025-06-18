@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include "uart.h"
 #include "pwm.h"
+
 typedef enum {
     STATE_WAIT_FOR_START = 0,
     STATE_MOVING,

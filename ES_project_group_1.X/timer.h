@@ -1,7 +1,7 @@
 #ifndef TIMER_H
 #define TIMER_H
 
-#include <xc.h> // Include processor files
+#include <xc.h>
 
 // Timer usage definitions:
 // TIMER1: Main loop period management at 500 Hz.
@@ -34,12 +34,4 @@ void tmr_setup_period(int timer, int ms);
  */
 void tmr_wait_period(int timer);
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
-#endif	/* XC_HEADER_TEMPLATE_H */
+#endif
