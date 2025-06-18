@@ -30,29 +30,30 @@ extern volatile int g_yawrate;
 
 void UART_Initialize(void) {
     // PPS configuration
-    RPOR0bits.RP64R = 1;      // Set RP64 as U1TX
-    RPINR18bits.U1RXR = 75;   // Set RP75 as U1RX
-    
+    RPOR0bits.RP64R = 1; // Set RP64 as U1TX
+    RPINR18bits.U1RXR = 75; // Set RP75 as U1RX
+
     // UART mode configuration
-    U1MODEbits.STSEL = 0;     // 1 Stop bit
-    U1MODEbits.PDSEL = 0;     // No Parity, 8 data bits
-    U1MODEbits.ABAUD = 0;     // Auto-Baud Disabled
-    U1MODEbits.BRGH = 0;      // Low Speed mode
-    U1BRG = BRGVAL;           // BAUD Rate Setting for 9600
-    
+    U1MODEbits.STSEL = 0; // 1 Stop bit
+    U1MODEbits.PDSEL = 0; // No Parity, 8 data bits
+    U1MODEbits.ABAUD = 0; // Auto-Baud Disabled
+    U1MODEbits.BRGH = 0; // Low Speed mode
+    U1BRG = BRGVAL; // BAUD Rate Setting for 9600
+
     // TX Interrupt is generated when a character is transferred to the shift register
     U1STAbits.UTXISEL0 = 0;
     U1STAbits.UTXISEL1 = 0;
-    
-    IEC0bits.U1RXIE = 1;      // Enable UART RX Interrupt
-    IEC0bits.U1TXIE = 0;      // TX Interrupt is disabled until there is data to send
+
+    IEC0bits.U1RXIE = 1; // Enable UART RX Interrupt
+    IEC0bits.U1TXIE = 0; // TX Interrupt is disabled until there is data to send
 
     // Enable UART
-    U1MODEbits.UARTEN = 1;    // Enable UART module
-    U1STAbits.UTXEN = 1;      // Enable UART TX
+    U1MODEbits.UARTEN = 1; // Enable UART module
+    U1STAbits.UTXEN = 1; // Enable UART TX
 }
 
 // Queues a string for transmission. This function is NON-BLOCKING.
+
 void UART_SendString(const char *str) {
     // Add all characters to the software buffer
     while (*str) {
@@ -60,7 +61,7 @@ void UART_SendString(const char *str) {
         if (next_head == tx_tail) {
             // Buffer is full. Stop adding to prevent an overwrite.
             // This is better than freezing the whole system.
-            break; 
+            break;
         }
         tx_buffer[tx_head] = *str++;
         tx_head = next_head;
@@ -70,8 +71,8 @@ void UART_SendString(const char *str) {
     // We must enable it AND manually set the flag to force the ISR to run once
     // and begin the transmission process.
     if (IEC0bits.U1TXIE == 0 && tx_head != tx_tail) {
-        IEC0bits.U1TXIE = 1;   // Enable the interrupt
-        IFS0bits.U1TXIF = 1;   // Manually trigger the interrupt
+        IEC0bits.U1TXIE = 1; // Enable the interrupt
+        IFS0bits.U1TXIF = 1; // Manually trigger the interrupt
     }
 }
 
@@ -79,19 +80,18 @@ void process_uart_command(const char *input) {
     // Check if the command is for motor control
     if (strncmp(input, "$PCREF,", 7) == 0) {
         process_pcref_command(input);
-    } 
-    //
-    // in this section future commands will be added
-    //  like in this format
-    // else if (strncmp(input, "$SOME_OTHER_CMD,", 16) == 0) {
-    //     process_some_other_commandd(input from uart);
-    // }
-    //
+    }
+        //
+        // in this section future commands will be added
+        //  like in this format
+        // else if (strncmp(input, "$SOME_OTHER_CMD,", 16) == 0) {
+        //     process_some_other_commandd(input from uart);
+        // }
+        //
     else {
         UART_SendString("$ERR,Unknown command*\r\n");
     }
 }
-
 
 void process_pcref_command(const char *command) {
     int speed, yawrate;
@@ -111,6 +111,7 @@ void process_pcref_command(const char *command) {
 
 // TX Interrupt: Handles sending data from the TX circular buffer.
 // This ISR is short, non-blocking, and sends one character per activation. 
+
 void __attribute__((interrupt, no_auto_psv)) _U1TXInterrupt(void) {
     IFS0bits.U1TXIF = 0; // Clear the interrupt flag immediately
 
@@ -120,8 +121,8 @@ void __attribute__((interrupt, no_auto_psv)) _U1TXInterrupt(void) {
         // which will call this ISR again, creating a chain reaction.
         U1TXREG = tx_buffer[tx_tail];
         tx_tail = (tx_tail + 1) % TX_BUFFER_SIZE;
-    } 
-    
+    }
+
     if (tx_head == tx_tail) {
         // Buffer is now empty, so the job is done. Disable the interrupt.
         // It will be re-enabled and re-triggered by UART_SendString when new data arrives.
@@ -130,16 +131,19 @@ void __attribute__((interrupt, no_auto_psv)) _U1TXInterrupt(void) {
 }
 
 // RX Interrupt: Handles received characters, echoes them, and builds a command string. 
+
 void __attribute__((interrupt, no_auto_psv)) _U1RXInterrupt(void) {
     IFS0bits.U1RXIF = 0; // Clear RX interrupt flag
-    if (U1STAbits.OERR) { U1STAbits.OERR = 0; }
-    
+    if (U1STAbits.OERR) {
+        U1STAbits.OERR = 0;
+    }
+
     char received = U1RXREG; // Read character from hardware
 
     // --- Non-blocking Echo ---
     // Place the received character into the TX buffer to be sent by the TX interrupt.
     uint16_t next_head = (tx_head + 1) % TX_BUFFER_SIZE;
-    if (next_head != tx_tail) { 
+    if (next_head != tx_tail) {
         tx_buffer[tx_head] = received;
         tx_head = next_head;
 
@@ -154,8 +158,8 @@ void __attribute__((interrupt, no_auto_psv)) _U1RXInterrupt(void) {
     if (received == '\r' || received == '\n') {
         if (rx_idx > 0) {
             rxBuffer[rx_idx] = '\0'; // Null-terminate
-            rxStringReady = 1;       // Set flag for the main loop
-            rx_idx = 0;              // Reset for next command
+            rxStringReady = 1; // Set flag for the main loop
+            rx_idx = 0; // Reset for next command
         }
     } else if (rx_idx < RX_BUFFER_SIZE - 1) {
         rxBuffer[rx_idx++] = received;

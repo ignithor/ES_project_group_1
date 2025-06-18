@@ -27,22 +27,22 @@ void tmr_setup_period(int timer, int ms) {
     switch (timer) {
         case TIMER1:
             // TIMER1: Manage main loop period at 100Hz
-            T1CONbits.TON = 0;      // Disable Timer1 during configuration
-            TMR1 = 0;               // Reset Timer1 counter register
-            T1CONbits.TCKPS = 3;    // Set prescaler to 1:256
-            PR1 = ((FCY / 256) * ms) / 1000 - 1;  // Calculate period register value
-            IFS0bits.T1IF = 0;      // Clear Timer1 interrupt flag
-            T1CONbits.TON = 1;      // Enable Timer1
+            T1CONbits.TON = 0; // Disable Timer1 during configuration
+            TMR1 = 0; // Reset Timer1 counter register
+            T1CONbits.TCKPS = 3; // Set prescaler to 1:256
+            PR1 = ((FCY / 256) * ms) / 1000 - 1; // Calculate period register value
+            IFS0bits.T1IF = 0; // Clear Timer1 interrupt flag
+            T1CONbits.TON = 1; // Enable Timer1
             break;
 
         case TIMER2:
             // TIMER2: Used for precise delays (e.g., 7ms algorithm simulation)
-            T2CONbits.TON = 0;      // Disable Timer2 during configuration
-            TMR2 = 0;               // Reset Timer2 counter register
-            T2CONbits.TCKPS = 3;    // Set prescaler to 1:256
-            PR2 = ((FCY / 256) * ms) / 1000 - 1;  // Calculate period register value
-            IFS0bits.T2IF = 0;      // Clear Timer2 interrupt flag
-            T2CONbits.TON = 1;      // Enable Timer2
+            T2CONbits.TON = 0; // Disable Timer2 during configuration
+            TMR2 = 0; // Reset Timer2 counter register
+            T2CONbits.TCKPS = 3; // Set prescaler to 1:256
+            PR2 = ((FCY / 256) * ms) / 1000 - 1; // Calculate period register value
+            IFS0bits.T2IF = 0; // Clear Timer2 interrupt flag
+            T2CONbits.TON = 1; // Enable Timer2
             break;
         default:
             // Invalid timer specified - no action taken
@@ -62,14 +62,14 @@ void tmr_wait_period(int timer) {
     switch (timer) {
         case TIMER1:
             // TIMER1: Wait for the main loop period to complete
-            while (!IFS0bits.T1IF);  // Block until Timer1 period flag is set
-            IFS0bits.T1IF = 0;       // Clear the flag for next period
+            while (!IFS0bits.T1IF); // Block until Timer1 period flag is set
+            IFS0bits.T1IF = 0; // Clear the flag for next period
             break;
-            
+
         case TIMER2:
             // TIMER2: Wait for the specified delay to complete
-            while (!IFS0bits.T2IF);  // Block until Timer2 period flag is set
-            IFS0bits.T2IF = 0;       // Clear the flag for next use
+            while (!IFS0bits.T2IF); // Block until Timer2 period flag is set
+            IFS0bits.T2IF = 0; // Clear the flag for next use
             break;
 
         default:
@@ -90,14 +90,14 @@ void tmr_wait_period(int timer) {
 void tmr_wait_ms(int timer, int ms) {
     // Configure timer for the specified period
     tmr_setup_period(timer, ms);
-    
+
     // Block until the timer period completes
     tmr_wait_period(timer);
 
     // Stop the timer if it was TIMER2 (for one-shot delays)
     switch (timer) {
         case TIMER2:
-            T2CONbits.TON = 0;  // Disable Timer2 after use
+            T2CONbits.TON = 0; // Disable Timer2 after use
             break;
         default:
             // Other timers remain running for continuous operation
