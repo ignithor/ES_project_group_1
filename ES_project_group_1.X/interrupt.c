@@ -28,8 +28,6 @@ void __attribute__((__interrupt__, __auto_psv__)) _INT1Interrupt(void) {
             case STATE_WAIT_FOR_START:
                 // Transition to Moving state
                 current_state = STATE_MOVING;
-                // Start motors at 50% duty cycle
-                set_motor_pwm(PWM_PERIOD / 2, PWM_PERIOD / 2);
                 break;
 
             case STATE_MOVING:

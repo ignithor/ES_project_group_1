@@ -5,6 +5,7 @@
  * Created on June 9, 2025, 5:32 PM
  */
 
+#include <stdint.h>
 #include <stdio.h>
 #include <math.h>
 #include "xc.h"
@@ -85,6 +86,7 @@ int main(void) {
     int tmr_counter_send_distance = 0;
     int tmr_counter_accelerometer = 0;
     int tmr_counter_uart = 0;
+    int tmr_counter_battery = 0;
 
     // Configure SPI
     spi_setup();
@@ -95,12 +97,12 @@ int main(void) {
 
     while (1) {
         if (rxStringReady) {
-            // A command is ready. Call the processor function.
-            process_uart_command((const char *) rxBuffer);
-            // CRITICAL: Clear the flag so we don't process the same command again.
-            rxStringReady = 0; // it will be setted later if we recieve another command from uart
+        // A command is ready. Call the processor function.
+        process_uart_command((const char *) rxBuffer);
+        // CRITICAL: Clear the flag so we don't process the same command again.
+        rxStringReady = 0; // it will be setted later if we recieve another command from uart
         }
-
+        
         // Handle LED blinking (1000ms period)
         if (tmr_counter_led == 500) {
             LED1 = !LED1;
@@ -114,6 +116,15 @@ int main(void) {
             sprintf(distance_message, "$MDIST,%d*\r\n", average_distance());
             UART_SendString(distance_message);
             tmr_counter_send_distance = 0; // Reset send distance counter
+        }
+
+        // Acquire battery voltage at 1Hz (every 1000ms)
+        if (tmr_counter_battery == 1000) {
+            double battery_voltage = adc_battery_voltage();
+            char bat_message[20];
+            sprintf(bat_message, "$MBATT,%.2f*\r\n", battery_voltage);
+            UART_SendString(bat_message);
+            tmr_counter_battery = 0;
         }
 
         if (current_state == STATE_MOVING) {
@@ -179,6 +190,7 @@ int main(void) {
         tmr_counter_led += 2;
         tmr_counter_accelerometer += 2;
         tmr_counter_uart += 2;
+        tmr_counter_battery += 2;
     }
     return 0;
 }
