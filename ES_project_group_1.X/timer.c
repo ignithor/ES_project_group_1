@@ -1,19 +1,23 @@
-/*
- * File:   timer.c
- * Author: Team 1
- *
- * Created on March 3, 2025, 9:32 AM
- * 
- * Description:
- * This file implements timer management functionality for the application.
- * It handles configuring and using multiple timer peripherals for different timing requirements:
- * - TIMER1: Controls the main loop execution rate at 500 Hz
- * - TIMER2: Used to process bouncing in interrupt routine for pressed button
- */
+/* ===============================================================
+ * File:   main.c                                                =
+ * Author: group 1                                               =   
+ * Paul Pham Dang                                                =   
+ * Waleed Elfieky                                                =
+ * Yui Momiyama                                                  =
+ * Mamoru Ota                                                    =
+ * TIMER1: Controls the main loop execution rate at 500 Hz       =
+ * TIMER2: Used to process bouncing in interrupt routine for     =
+ * pressed button                                                =
+ * ===============================================================*/
 
+/*================================================================*/
 #include "xc.h"
 #include "timer.h"
+/*================================================================*/
 
+/*================================================================*/
+//setup timer configuration and ticks
+/*================================================================*/
 void tmr_setup_period(int timer, int ms) {
     switch (timer) {
         case TIMER1:
@@ -40,7 +44,11 @@ void tmr_setup_period(int timer, int ms) {
             break;
     }
 }
+/*================================================================*/
 
+/*================================================================*/
+//busy wait timer
+/*================================================================*/
 void tmr_wait_period(int timer) {
     switch (timer) {
         case TIMER1:
@@ -60,3 +68,4 @@ void tmr_wait_period(int timer) {
             break;
     }
 }
+/*================================================================*/
