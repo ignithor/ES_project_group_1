@@ -40,10 +40,10 @@ int is_pwm_on; // Flag for PWM generation status
 extern volatile char rxBuffer[RX_BUFFER_COUNT][RX_STRING_LENGTH];              
 extern volatile uint8_t rx_write_index;                                        
 extern volatile uint8_t rx_read_index;                                         
-// Accelerometer variables                                                        
-extern volatile int x_acc;
-extern volatile int y_acc;
-extern volatile int z_acc;                                                           
+// // Accelerometer variables                                                        
+// extern volatile int x_acc;
+// extern volatile int y_acc;
+// extern volatile int z_acc;                                                           
 /*================================================================================*/
 
 // User defined variables
@@ -76,6 +76,8 @@ int main(void) {
     // Initialize states
     current_state = STATE_WAIT_FOR_START;
     is_pwm_on = 0; //pwm initially off
+    // Register for accelerometer
+    int x_acc, y_acc, z_acc;
     /*==========================================================================*/
     //peripheral initialization
     UART_Initialize();
@@ -183,7 +185,7 @@ int main(void) {
         // Acquire accelerometer data at 10Hz (every 100ms)
         if (tmr_counter_accelerometer == 100) {
             tmr_counter_accelerometer = 0; // Reset accelerometer counter
-            acquire_accelerometer_data();
+            acquire_accelerometer_data(&x_acc, &y_acc, &z_acc);
             char acc_message[RX_STRING_LENGTH]; // Buffer for ACC message
             sprintf(acc_message, "$MACC,%d,%d,%d*\r\n", x_acc, y_acc, z_acc);
             UART_SendString(acc_message);

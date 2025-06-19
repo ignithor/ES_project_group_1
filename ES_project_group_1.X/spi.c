@@ -11,10 +11,10 @@
 /*================================================================*/
 
 /*================================================================*/
- // Global variables definitions for accelerometer sensor data
- volatile int x_acc; // X-axis accelerometer 
- volatile int y_acc; // Y-axis accelerometer 
- volatile int z_acc; // Z-axis accelerometer
+//  // Global variables definitions for accelerometer sensor data
+//  volatile int x_acc; // X-axis accelerometer 
+//  volatile int y_acc; // Y-axis accelerometer 
+//  volatile int z_acc; // Z-axis accelerometer
 /*================================================================*/
 
 /*================================================================*/
@@ -98,7 +98,7 @@ void accelerometer_config(void) {
 
 
 /*================================================================*/
-void acquire_accelerometer_data(void) {
+void acquire_accelerometer_data(int *x_acc, int *y_acc, int *z_acc) {
     ACC_CS = 0; 
 
     int acc_first_address = 0x02; // First data register address for accelerometer
@@ -109,21 +109,21 @@ void acquire_accelerometer_data(void) {
     uint8_t x_MSB_byte = spi_write(0x03); // Read X-MSB register
     // Process X-axis data: 13-bit value, discard lower 3 bits
     int x_value = ((x_MSB_byte << 8) | (x_LSB_byte & 0xF8)) / 16;
-    x_acc = (int) round(0.98 * x_value); // Change unit into mg
+    *x_acc = (int) round(0.98 * x_value); // Change unit into mg
 
     // Acquire Y-axis accelerometer data
     uint8_t y_LSB_byte = spi_write(0x04); // Read Y-LSB register
     uint8_t y_MSB_byte = spi_write(0x05); // Read Y-MSB register
     // Process Y-axis data: 13-bit value, discard lower 3 bits
     int y_value = ((y_MSB_byte << 8) | (y_LSB_byte & 0xF8)) / 16;
-    y_acc = (int) round(0.98 * y_value); // Change unit into mg
+    *y_acc = (int) round(0.98 * y_value); // Change unit into mg
 
     // Acquire Z-axis accelerometer data
     uint8_t z_LSB_byte = spi_write(0x06); // Read Z-LSB register
     uint8_t z_MSB_byte = spi_write(0x07); // Read Z-MSB register
     // Process Z-axis data: 13-bit value, discard lower 3 bits
     int z_value = ((z_MSB_byte << 8) | (z_LSB_byte & 0xF8)) / 16;
-    z_acc = (int) round(0.98 * z_value); // Change unit into mg
+    *z_acc = (int) round(0.98 * z_value); // Change unit into mg
 
     ACC_CS = 1; 
 }

@@ -35,6 +35,6 @@ void accelerometer_config(void);
 // Reads raw accelerometer data from the BMX055 via SPI.
 // Acquires and processes X, Y, and Z axis data into global variables.
 // Converts 13-bit values by discarding the lowest 3 bits.
-void acquire_accelerometer_data(void);
+void acquire_accelerometer_data(int *x_acc, int *y_acc, int *z_acc);
 
 #endif // SPI_H
