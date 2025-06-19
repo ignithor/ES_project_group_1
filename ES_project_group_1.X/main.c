@@ -68,7 +68,6 @@ int main(void) {
     TURN_R = 0;
     float distance = 0.0; // Variable to store distance from IR sensor
     float distance_threshold = 0.2; // Distance threshold for emergency state (20cm)
-    char acc_message[32]; // Buffer for ACC message
     // Initialize states
     current_state = STATE_WAIT_FOR_START;
     is_pwm_on = 0; //pwm initliialty off

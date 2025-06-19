@@ -87,7 +87,7 @@ void acquire_accelerometer_data(void) {
     // Process X-axis data: 13-bit value, discard lower 3 bits
     int x_value = ((x_MSB_byte << 8) | (x_LSB_byte & 0xF8)) / 8;
     // x_values_acc = x_value;
-    int x_acc = (int) round(0.977 * x_value); // Change unit into mg
+    x_acc = (int) round(0.977 * x_value); // Change unit into mg
 
     // Acquire Y-axis accelerometer data
     uint8_t y_LSB_byte = spi_write(0x04); // Read Y-LSB register
@@ -95,7 +95,7 @@ void acquire_accelerometer_data(void) {
     // Process Y-axis data: 13-bit value, discard lower 3 bits
     int y_value = ((y_MSB_byte << 8) | (y_LSB_byte & 0xF8)) / 8;
     // y_values_acc = y_value;
-    int y_acc = (int) round(0.977 * y_value); // Change unit into mg
+    y_acc = (int) round(0.977 * y_value); // Change unit into mg
 
     // Acquire Z-axis accelerometer data
     uint8_t z_LSB_byte = spi_write(0x06); // Read Z-LSB register
@@ -103,27 +103,15 @@ void acquire_accelerometer_data(void) {
     // Process Z-axis data: 13-bit value, discard lower 3 bits
     int z_value = ((z_MSB_byte << 8) | (z_LSB_byte & 0xF8)) / 8;
     // z_values_acc = z_value;
-    int z_acc = (int) round(0.977 * z_value); // Change unit into mg
+    z_acc = (int) round(0.977 * z_value); // Change unit into mg
 
     ACC_CS = 1; 
 }
 
-// int filter_accelerometer(int values, char axis) {
-//     int bias = 0;
-//     // Set the accelerometer offset for each axis when "wait for start" state
-//     switch (axis) {
-//         case 'x': bias = -70;
-//             break;
-//         case 'y': bias = -94;
-//             break;
-//         case 'z': bias = 983;
-//             break;
-//         default: bias = 0;
-//             break;
-//     }
-//     // Convert raw average to acceleration in [mg]
-//     int acc_in_mg = (int) round(0.977 * values);
+// int filter_accelerometer(int value) {
 
-//     // Return average value after bias correction
-//     return acc_in_mg - bias;
+//     // Convert raw average to acceleration in [mg]
+//     int value_mg = (int) round(0.977 * value);
+
+//     return value_mg;
 // }
