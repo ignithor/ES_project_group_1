@@ -99,21 +99,21 @@ void acquire_accelerometer_data(int *x_acc, int *y_acc, int *z_acc) {
     // Acquire X-axis accelerometer data
     uint8_t x_LSB_byte = spi_write(0x02); // Read X-LSB register
     uint8_t x_MSB_byte = spi_write(0x03); // Read X-MSB register
-    // Process X-axis data: 13-bit value, discard lower 3 bits
+    // Process X-axis data: 12-bit value, discard lower 4 bits
     int x_value = ((x_MSB_byte << 8) | (x_LSB_byte & 0xF8)) / 16;
     *x_acc = (int) round(0.98 * x_value); // Change unit into mg
 
     // Acquire Y-axis accelerometer data
     uint8_t y_LSB_byte = spi_write(0x04); // Read Y-LSB register
     uint8_t y_MSB_byte = spi_write(0x05); // Read Y-MSB register
-    // Process Y-axis data: 13-bit value, discard lower 3 bits
+    // Process Y-axis data: 12-bit value, discard lower 4 bits
     int y_value = ((y_MSB_byte << 8) | (y_LSB_byte & 0xF8)) / 16;
     *y_acc = (int) round(0.98 * y_value); // Change unit into mg
 
     // Acquire Z-axis accelerometer data
     uint8_t z_LSB_byte = spi_write(0x06); // Read Z-LSB register
     uint8_t z_MSB_byte = spi_write(0x07); // Read Z-MSB register
-    // Process Z-axis data: 13-bit value, discard lower 3 bits
+    // Process Z-axis data: 12-bit value, discard lower 4 bits
     int z_value = ((z_MSB_byte << 8) | (z_LSB_byte & 0xF8)) / 16;
     *z_acc = (int) round(0.98 * z_value); // Change unit into mg
 
