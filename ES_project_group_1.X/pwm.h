@@ -27,7 +27,7 @@ void set_pwm_duty(volatile unsigned int* oc_r, unsigned int duty);
 // Set PWM for both motors
 void set_motor_pwm(int left_pwm, int right_pwm);
 
-//control motors by sending values between -100 and 100
+// Control motors by sending values between -100 and 100
 void control_motors(int speed, int yawrate);
 
 #endif /* PWM_H */

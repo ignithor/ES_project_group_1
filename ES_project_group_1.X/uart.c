@@ -8,13 +8,8 @@
  * ===============================================================*/
 
 /*========================================================*/
-//includes
-#include "xc.h"
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
+//include
 #include "uart.h"
-#include "pwm.h"
 /*========================================================*/
 // External variables
 extern volatile int g_speed;

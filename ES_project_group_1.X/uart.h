@@ -11,6 +11,11 @@
 #define	UART_H
 
 #include <xc.h> 
+#include "pwm.h"
+#include "xc.h"
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 /* Baud Rate Configuration */
 #define FCY             72000000

@@ -11,7 +11,7 @@
 
 #include "pwm.h"
 #include "timer.h"
-#include "xc.h"
+#include <xc.h>
 
 // Interrupt handler declarations
 void __attribute__((__interrupt__, __auto_psv__)) _INT1Interrupt(void);
