@@ -1,12 +1,17 @@
+/* ===============================================================
+ * File: interrupt.h                                             =
+ * Author: group 1                                               =   
+ * Paul Pham Dang                                                =   
+ * Waleed Elfieky                                                =
+ * Yui Momiyama                                                  =
+ * Mamoru Ota                                                    =
+ * ===============================================================*/
 #ifndef INTERRUPTS_H
 #define INTERRUPTS_H
 
 #include "pwm.h"
 #include "timer.h"
 #include "xc.h"
-
-// External state variables
-extern int is_pwm_on;
 
 // Interrupt handler declarations
 void __attribute__((__interrupt__, __auto_psv__)) _INT1Interrupt(void);

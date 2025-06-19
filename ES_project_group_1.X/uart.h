@@ -1,3 +1,12 @@
+/* ===============================================================
+ * File: urat.h                                                  =
+ * Author: group 1                                               =   
+ * Paul Pham Dang                                                =   
+ * Waleed Elfieky                                                =
+ * Yui Momiyama                                                  =
+ * Mamoru Ota                                                    =
+ * ===============================================================*/
+
 #ifndef UART_H
 #define	UART_H
 
