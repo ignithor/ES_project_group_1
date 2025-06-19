@@ -9,9 +9,9 @@
 
 // Extern declarations for accelerometer data buffers. These arrays store the most recent
 // measurements for the x, y, and z axes respectively.
-extern int x_values_acc;
-extern int y_values_acc;
-extern int z_values_acc;
+extern int x_acc;
+extern int y_acc;
+extern int z_acc;
 
 // Initializes the SPI peripheral.
 // Sets up necessary SPI registers and pin configuration.
@@ -40,6 +40,6 @@ void acquire_accelerometer_data(void);
 //   axis   - axis label ('x', 'y', or 'z')
 // Returns:
 //   Bias-corrected and scaled acceleration value in mg
-int filter_accelerometer(int values, char axis);
+// int filter_accelerometer(int values, char axis);
 
 #endif // SPI_H
