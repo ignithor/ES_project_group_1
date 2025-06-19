@@ -1,3 +1,12 @@
+/* ===============================================================
+ * File: pwm.h                                                   =
+ * Author: group 1                                               =   
+ * Paul Pham Dang                                                =   
+ * Waleed Elfieky                                                =
+ * Yui Momiyama                                                  =
+ * Mamoru Ota                                                    =
+ * ===============================================================*/
+
 #ifndef PWM_H
 #define PWM_H
 

@@ -1,10 +1,24 @@
+/* ===============================================================
+ * File: spi.h                                                   =
+ * Author: group 1                                               =   
+ * Paul Pham Dang                                                =   
+ * Waleed Elfieky                                                =
+ * Yui Momiyama                                                  =
+ * Mamoru Ota                                                    =
+ * ===============================================================*/
+/*================================================================*/
 #include "spi.h"
+/*================================================================*/
 
- // Global variable definitions for accelerometer sensor data
+/*================================================================*/
+ // Global variables definitions for accelerometer sensor data
  volatile int x_acc; // X-axis accelerometer 
  volatile int y_acc; // Y-axis accelerometer 
  volatile int z_acc; // Z-axis accelerometer
+/*================================================================*/
 
+/*================================================================*/
+/*================================================================*/
 int spi_write(int addr) {
     // Wait until transmit buffer is not full
     while (SPI1STATbits.SPITBF == 1);
@@ -16,7 +30,10 @@ int spi_write(int addr) {
     int response = SPI1BUF;
     return response;
 }
+/*================================================================*/
 
+
+/*================================================================*/
 void spi_setup(void) {
     // Configure chip select pins for the accelerometer
     TRISBbits.TRISB3 = 0; // CS1: accelerometer set as output
@@ -45,7 +62,10 @@ void spi_setup(void) {
     SPI1STATbits.SPIEN = 1; // Enable SPI peripheral
     SPI1STATbits.SPIROV = 0; // Clear receive overflow flag
 }
+/*================================================================*/
 
+
+/*================================================================*/
 void accelerometer_config(void) {
     // Power on the accelerometer (exit suspend mode)
     ACC_CS = 0; // Enable chip select for accelerometer
@@ -74,7 +94,10 @@ void accelerometer_config(void) {
     spi_write(0b0); // Enable filtering and shadowing
     ACC_CS = 1;
 }
+/*================================================================*/
 
+
+/*================================================================*/
 void acquire_accelerometer_data(void) {
     ACC_CS = 0; 
 
@@ -104,3 +127,4 @@ void acquire_accelerometer_data(void) {
 
     ACC_CS = 1; 
 }
+/*================================================================*/

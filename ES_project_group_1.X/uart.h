@@ -1,5 +1,5 @@
 /* ===============================================================
- * File: urat.h                                                  =
+ * File: uart.h                                                  =
  * Author: group 1                                               =   
  * Paul Pham Dang                                                =   
  * Waleed Elfieky                                                =

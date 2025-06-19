@@ -1,8 +1,19 @@
+/* ===============================================================
+ * File: pwm.c                                                   =
+ * Author: group 1                                               =   
+ * Paul Pham Dang                                                =   
+ * Waleed Elfieky                                                =
+ * Yui Momiyama                                                  =
+ * Mamoru Ota                                                    =
+ * ===============================================================*/
+
+/*================================================================*/
 #include <xc.h>
 #include "pwm.h"
+/*================================================================*/
 
+/*================================================================*/
 // Initialize PWM modules for motor control
-
 void init_pwm(void) {
     // Configure RD1-RD4 as outputs for motor control
     TRISDbits.TRISD1 = 0; // RD1 = OC1 (Left Backward)
@@ -28,9 +39,11 @@ void init_pwm(void) {
     setup_oc_module(&OC3CON1, &OC3CON2, PWM_PERIOD); // Right Backward
     setup_oc_module(&OC4CON1, &OC4CON2, PWM_PERIOD); // Right Forward
 }
+/*================================================================*/
 
+/*================================================================*/
 // Configure an Output Compare module for PWM generation
-
+/*================================================================*/
 void setup_oc_module(volatile unsigned int* con1, volatile unsigned int* con2, unsigned int period) {
     // Clear control registers
     *con1 = 0;
@@ -46,9 +59,11 @@ void setup_oc_module(volatile unsigned int* con1, volatile unsigned int* con2, u
     *con1 |= (0x07 << 0); // OCTSEL = Peripheral clock (Fcy)
     *con1 |= (0x06 << 0); // Edge-aligned PWM mode
 }
+/*================================================================*/
 
+/*================================================================*/
 // Set PWM duty cycle for a specific Output Compare module
-
+/*================================================================*/
 void set_pwm_duty(volatile unsigned int* oc_r, unsigned int duty) {
     // Limit duty cycle to PWM_PERIOD
     if (duty > PWM_PERIOD) {
@@ -56,9 +71,11 @@ void set_pwm_duty(volatile unsigned int* oc_r, unsigned int duty) {
     }
     *oc_r = duty;
 }
+/*================================================================*/
 
+/*================================================================*/
 // Set PWM for both motors
-
+/*================================================================*/
 void set_motor_pwm(int left_pwm, int right_pwm) {
     // Control left motor
     if (left_pwm >= 0) {
@@ -82,7 +99,13 @@ void set_motor_pwm(int left_pwm, int right_pwm) {
         set_pwm_duty(&OC4R, -right_pwm); // Right backward = |duty|
     }
 }
+/*================================================================*/
 
+/*================================================================*/
+/*function to control motor speed with a value between -100 to 100
+we have ensured this value in parsing stage
+*/
+/*================================================================*/
 void control_motors(int speed, int yawrate) {
     // 1. Map speed and yawrate from [-100, 100] to [-PWM_PERIOD, PWM_PERIOD]
     long speed_pwm = (long) speed * PWM_PERIOD / 100;

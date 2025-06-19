@@ -1,15 +1,22 @@
+/* ===============================================================
+ * File: adc.c                                                   =
+ * Author: group 1                                               =   
+ * Paul Pham Dang                                                =   
+ * Waleed Elfieky                                                =
+ * Yui Momiyama                                                  =
+ * Mamoru Ota                                                    =
+ * ===============================================================*/
 #include "adc.h"
-
+/*=================================================================*/
+// variables
 float distance_buffer[BUFFER_SIZE];
 float battery_buffer[BUFFER_SIZE];
 int buffer_index = 0;
 int buffer_filled = 0;
 int battery_buffer_index = 0;
 int battery_buffer_filled = 0;
-
+/*=================================================================*/
 void setup_adc(void) {
-
-
     // Configure analog pins
     ANSELBbits.ANSB11 = 1;  // Battery voltage
     TRISBbits.TRISB11 = 1;
@@ -37,7 +44,9 @@ void setup_adc(void) {
             
     AD1CON1bits.ADON = 1; // Turn ON ADC 
 }
+/*=================================================================*/
 
+/*=================================================================*/
 float adc_distance(void) {
     // Read ADC: Automatic sampling & conversion
     while (!AD1CON1bits.DONE); // Wait for the conversion to complete
@@ -57,7 +66,9 @@ float adc_distance(void) {
     }
     return distance;
 }
+/*=================================================================*/
 
+/*=================================================================*/
 int average_distance(void) {
     float sum = 0.0;
     int i;
@@ -73,7 +84,9 @@ int average_distance(void) {
 
     return result;
 }
+/*=================================================================*/
 
+/*=================================================================*/
 float adc_battery_voltage(void) {
     // Read ADC: Automatic sampling & conversion
     while (!AD1CON1bits.DONE);      // Wait for the conversion to complete
@@ -92,7 +105,9 @@ float adc_battery_voltage(void) {
     
     return vbat;
 }
+/*=================================================================*/
 
+/*=================================================================*/
 float average_battery_voltage(void) {
     float sum = 0.0;
     int i;
@@ -107,3 +122,4 @@ float average_battery_voltage(void) {
     
     return sum / battery_buffer_filled;
 }
+/*=================================================================*/

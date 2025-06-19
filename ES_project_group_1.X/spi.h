@@ -1,3 +1,12 @@
+/* ===============================================================
+ * File: spi.h                                                   =
+ * Author: group 1                                               =   
+ * Paul Pham Dang                                                =   
+ * Waleed Elfieky                                                =
+ * Yui Momiyama                                                  =
+ * Mamoru Ota                                                    =
+ * ===============================================================*/
+
 #ifndef SPI_H
 #define SPI_H
 

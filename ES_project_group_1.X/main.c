@@ -187,7 +187,6 @@ int main(void) {
             char acc_message[RX_STRING_LENGTH]; // Buffer for ACC message
             sprintf(acc_message, "$MACC,%d,%d,%d*\r\n", x_acc, y_acc, z_acc);
             UART_SendString(acc_message);
-            tmr_counter_uart = 0;
         }
         /*==========================================================================*/
         // Time handling
