@@ -184,10 +184,6 @@ int main(void) {
         }
         // Process and transmit ACC data at configurable rate (10 Hz)
         if (tmr_counter_uart == 100) {
-            // // Filter accelerometer value
-            // int x_acc = filter_accelerometer(x_values_acc, 'x');
-            // int y_acc = filter_accelerometer(y_values_acc, 'y');
-            // int z_acc = filter_accelerometer(z_values_acc, 'z');
             char acc_message[RX_STRING_LENGTH]; // Buffer for ACC message
             sprintf(acc_message, "$MACC,%d,%d,%d*\r\n", x_acc, y_acc, z_acc);
             UART_SendString(acc_message);

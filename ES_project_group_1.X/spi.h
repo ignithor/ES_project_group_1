@@ -28,12 +28,4 @@ void accelerometer_config(void);
 // Converts 13-bit values by discarding the lowest 3 bits.
 void acquire_accelerometer_data(void);
 
-// Applies axis-specific offset correction and scaling to accelerometer values.
-// Parameters:
-//   values - raw accelerometer reading to filter
-//   axis   - axis label ('x', 'y', or 'z')
-// Returns:
-//   Bias-corrected and scaled acceleration value in mg
-// int filter_accelerometer(int values, char axis);
-
 #endif // SPI_H
