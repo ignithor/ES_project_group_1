@@ -9,9 +9,9 @@
 
 // Extern declarations for accelerometer data buffers. These arrays store the most recent
 // measurements for the x, y, and z axes respectively.
-extern int x_acc;
-extern int y_acc;
-extern int z_acc;
+extern volatile int x_acc;
+extern volatile int y_acc;
+extern volatile int z_acc;
 
 // Initializes the SPI peripheral.
 // Sets up necessary SPI registers and pin configuration.

@@ -43,9 +43,9 @@ extern volatile uint8_t rx_read_index;
 #define TURN_L LATFbits.LATF1
 #define TURN_R LATBbits.LATB8
 
-extern int x_acc;
-extern int y_acc;
-extern int z_acc;
+extern volatile int x_acc;
+extern volatile int y_acc;
+extern volatile int z_acc;
 
 int main(void) {
     // Disable all analog functionality on pins to use them as digital I/O
