@@ -39,11 +39,7 @@ int is_pwm_on; // Flag for PWM generation status
 // Command buffer "all commands receieved in circular buffer"                  
 extern volatile char rxBuffer[RX_BUFFER_COUNT][RX_STRING_LENGTH];              
 extern volatile uint8_t rx_write_index;                                        
-extern volatile uint8_t rx_read_index;                                         
-// // Accelerometer variables                                                        
-// extern volatile int x_acc;
-// extern volatile int y_acc;
-// extern volatile int z_acc;                                                           
+extern volatile uint8_t rx_read_index;                                                                                                  
 /*================================================================================*/
 
 // User defined variables

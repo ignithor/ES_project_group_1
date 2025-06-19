@@ -11,14 +11,6 @@
 /*================================================================*/
 
 /*================================================================*/
-//  // Global variables definitions for accelerometer sensor data
-//  volatile int x_acc; // X-axis accelerometer 
-//  volatile int y_acc; // Y-axis accelerometer 
-//  volatile int z_acc; // Z-axis accelerometer
-/*================================================================*/
-
-/*================================================================*/
-/*================================================================*/
 int spi_write(int addr) {
     // Wait until transmit buffer is not full
     while (SPI1STATbits.SPITBF == 1);
