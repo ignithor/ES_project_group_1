@@ -64,7 +64,7 @@ void accelerometer_config(void) {
     ACC_CS = 0;
     unsigned int address_measurement_range = 0x0F; 
     spi_write(address_measurement_range);
-    spi_write(0x05); // Set ±4g range (1.95 mg/LSB)
+    spi_write(0x03); // Set ±2g range for best precision (0.98 mg/LSB)
     ACC_CS = 1;
 
     // Configure filtering
@@ -85,22 +85,22 @@ void acquire_accelerometer_data(void) {
     uint8_t x_LSB_byte = spi_write(0x02); // Read X-LSB register
     uint8_t x_MSB_byte = spi_write(0x03); // Read X-MSB register
     // Process X-axis data: 13-bit value, discard lower 3 bits
-    int x_value = ((x_MSB_byte << 8) | (x_LSB_byte & 0xF8)) / 8;
-    x_acc = (int) round(0.977 * x_value); // Change unit into mg
+    int x_value = ((x_MSB_byte << 8) | (x_LSB_byte & 0xF8)) / 16;
+    x_acc = (int) round(0.98 * x_value); // Change unit into mg
 
     // Acquire Y-axis accelerometer data
     uint8_t y_LSB_byte = spi_write(0x04); // Read Y-LSB register
     uint8_t y_MSB_byte = spi_write(0x05); // Read Y-MSB register
     // Process Y-axis data: 13-bit value, discard lower 3 bits
-    int y_value = ((y_MSB_byte << 8) | (y_LSB_byte & 0xF8)) / 8;
-    y_acc = (int) round(0.977 * y_value); // Change unit into mg
+    int y_value = ((y_MSB_byte << 8) | (y_LSB_byte & 0xF8)) / 16;
+    y_acc = (int) round(0.98 * y_value); // Change unit into mg
 
     // Acquire Z-axis accelerometer data
     uint8_t z_LSB_byte = spi_write(0x06); // Read Z-LSB register
     uint8_t z_MSB_byte = spi_write(0x07); // Read Z-MSB register
     // Process Z-axis data: 13-bit value, discard lower 3 bits
-    int z_value = ((z_MSB_byte << 8) | (z_LSB_byte & 0xF8)) / 8;
-    z_acc = (int) round(0.977 * z_value); // Change unit into mg
+    int z_value = ((z_MSB_byte << 8) | (z_LSB_byte & 0xF8)) / 16;
+    z_acc = (int) round(0.98 * z_value); // Change unit into mg
 
     ACC_CS = 1; 
 }
