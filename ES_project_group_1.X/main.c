@@ -57,7 +57,7 @@ int main(void) {
     TRISBbits.TRISB8 = 0; // Right LED
 
     UART_Initialize();
-    setup_adc(); // setup IR sensor ADC
+    setup_adc(); // setup IR sensor and battery ADC
 
     // Initialize state
     TURN_L = 0;
@@ -70,7 +70,7 @@ int main(void) {
     current_state = STATE_WAIT_FOR_START;
     is_pwm_on = 0;
 
-    // Initialize interrupts and states
+    // Initialize interrupts
     init_interrupts();
 
     // Initialize PWM and ensure motors are stopped
