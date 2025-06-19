@@ -44,7 +44,7 @@ float adc_distance(void) {
     int ADC_value = ADC1BUF1;       // Read IR sensor value
     
     // Convert the result to distance
-    float voltage = (float) ADC_value * 3.3 / 1023;
+    float voltage = (float) ADC_value * 3.3 / 1023.0;
     
     // Polynomial approximation for distance based on voltage
     float distance = 2.34 - 4.74 * voltage + 4.06 * pow(voltage, 2) - 1.60 * pow(voltage, 3) + 0.24 * pow(voltage, 4);
@@ -69,7 +69,7 @@ int average_distance(void) {
     for (i = 0; i < buffer_filled; i++) {
         sum += distance_buffer[i];
     }
-    int result = (sum * 100) / buffer_filled;
+    int result = (sum * 100) / buffer_filled; // Convert to cm
 
     return result;
 }
@@ -80,7 +80,7 @@ float adc_battery_voltage(void) {
     int ADC_value = ADC1BUF0;       // Read battery voltage
     
     // Convert ADC value to battery voltage (considering voltage divider)
-    float bat_vsense = (float)ADC_value * 3.3 / 1023;
+    float bat_vsense = (float)ADC_value * 3.3 / 1023.0;
     float vbat = bat_vsense * 3;    // Due to voltage divider (1/3 ratio)
     
     // Store in circular buffer
