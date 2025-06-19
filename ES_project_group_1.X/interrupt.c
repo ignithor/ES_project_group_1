@@ -56,13 +56,13 @@ void __attribute__((__interrupt__, __auto_psv__)) _INT1Interrupt(void) {
             case STATE_MOVING:
                 // Transition back to Wait for Start state
                 current_state = STATE_WAIT_FOR_START;
-                stop_motors();
+                set_motor_pwm(0, 0); // stop motors
                 break;
 
             default:
                 // Invalid state, transition to Wait for Start
                 current_state = STATE_WAIT_FOR_START;
-                stop_motors();
+                set_motor_pwm(0, 0); // stop motors
                 break;
         }
     }

@@ -10,9 +10,7 @@
 /*================================================================*/
 
 //includes                                                                  
-#include <stdint.h>
 #include <stdio.h>
-#include <math.h>
 #include "xc.h"
 #include "interrupt.h"
 #include "pwm.h"
@@ -87,7 +85,7 @@ int main(void) {
     // Initialize PWM and ensure motors are stopped
     init_pwm();
     //stop motor command to make sure pwm signal are zero
-    stop_motors();
+    set_motor_pwm(0, 0); // stop motors
     // Configure SPI
     spi_setup();
     // Configure accelerometer
@@ -104,7 +102,6 @@ int main(void) {
     int tmr_counter_emergency = 0;
     int tmr_counter_send_distance = 0;
     int tmr_counter_accelerometer = 0;
-    int tmr_counter_uart = 0;
     int tmr_counter_battery = 0;
     int tmr_counter_battery_read = 0;
     /*==========================================================================*/
@@ -153,7 +150,7 @@ int main(void) {
                 UART_SendString("$MEMRG,1* \r\n");
                 tmr_counter_emergency = 0; // Reset emergency counter
                 current_state = STATE_EMERGENCY;
-                stop_motors();
+                set_motor_pwm(0, 0); // stop motors
             } else {
                 control_motors(g_speed, g_yawrate);
             }
@@ -187,9 +184,6 @@ int main(void) {
         if (tmr_counter_accelerometer == 100) {
             tmr_counter_accelerometer = 0; // Reset accelerometer counter
             acquire_accelerometer_data();
-        }
-        // Process and transmit ACC data at configurable rate (10 Hz)
-        if (tmr_counter_uart == 100) {
             char acc_message[RX_STRING_LENGTH]; // Buffer for ACC message
             sprintf(acc_message, "$MACC,%d,%d,%d*\r\n", x_acc, y_acc, z_acc);
             UART_SendString(acc_message);
@@ -203,7 +197,6 @@ int main(void) {
         tmr_counter_send_distance += 2;
         tmr_counter_led += 2;
         tmr_counter_accelerometer += 2;
-        tmr_counter_uart += 2;
         tmr_counter_battery += 2;
         tmr_counter_battery_read += 2;
         /*==========================================================================*/

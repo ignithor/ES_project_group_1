@@ -113,10 +113,3 @@ void control_motors(int speed, int yawrate) {
     // 4. Call the low-level motor control function with the calculated PWM values
     set_motor_pwm(left_pwm_final, right_pwm_final);
 }
-
-// Stop both motors by setting PWM to 0
-
-void stop_motors(void) {
-    set_motor_pwm(0, 0);
-}
-
