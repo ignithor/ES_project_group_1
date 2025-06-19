@@ -85,21 +85,21 @@ void acquire_accelerometer_data(void) {
     uint8_t x_LSB_byte = spi_write(0x02); // Read X-LSB register
     uint8_t x_MSB_byte = spi_write(0x03); // Read X-MSB register
     // Process X-axis data: 13-bit value, discard lower 3 bits
-    int x_value = ((x_MSB_byte << 8) | (x_LSB_byte & 0xF8)) >> 3;
+    int x_value = ((x_MSB_byte << 8) | (x_LSB_byte & 0xF8)) / 8;
     x_values_acc = x_value;
 
     // Acquire Y-axis accelerometer data
     uint8_t y_LSB_byte = spi_write(0x04); // Read Y-LSB register
     uint8_t y_MSB_byte = spi_write(0x05); // Read Y-MSB register
     // Process Y-axis data: 13-bit value, discard lower 3 bits
-    int y_value = ((y_MSB_byte << 8) | (y_LSB_byte & 0xF8)) >> 3;
+    int y_value = ((y_MSB_byte << 8) | (y_LSB_byte & 0xF8)) / 8;
     y_values_acc = y_value;
 
     // Acquire Z-axis accelerometer data
     uint8_t z_LSB_byte = spi_write(0x06); // Read Z-LSB register
     uint8_t z_MSB_byte = spi_write(0x07); // Read Z-MSB register
     // Process Z-axis data: 13-bit value, discard lower 3 bits
-    int z_value = ((z_MSB_byte << 8) | (z_LSB_byte & 0xF8)) >> 3;
+    int z_value = ((z_MSB_byte << 8) | (z_LSB_byte & 0xF8)) / 8;
     z_values_acc = z_value;
 
     ACC_CS = 1; 
