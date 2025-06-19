@@ -1,19 +1,10 @@
 #include "spi.h"
 
-// Global variable definitions for accelerometer sensor data storage
+// Global variable definitions for accelerometer sensor data
 int x_values_acc; // X-axis accelerometer 
 int y_values_acc; // Y-axis accelerometer 
 int z_values_acc; // Z-axis accelerometer
 
-/**
- * @brief Transmits and receives a byte via SPI
- * 
- * Sends the given byte over SPI and returns the received response byte.
- * Implements a blocking mechanism to ensure transmission completion.
- * 
- * @param addr The byte to transmit via SPI
- * @return int The byte received from the SPI peripheral
- */
 int spi_write(int addr) {
     // Wait until transmit buffer is not full
     while (SPI1STATbits.SPITBF == 1);
@@ -26,23 +17,15 @@ int spi_write(int addr) {
     return response;
 }
 
-/**
- * @brief Initializes the SPI peripheral
- * 
- * Configures SPI1 pins, remaps IO, and sets up communication parameters
- * for interfacing with the sensor modules.
- */
 void spi_setup(void) {
-
     // Configure chip select pins for the accelerometer
     TRISBbits.TRISB3 = 0; // CS1: accelerometer set as output
     ACC_CS = 1; // Initialize CS high (inactive)
 
-
     // Configure SPI data and clock pins
-    TRISAbits.TRISA1 = 1; // RA1-RPI17 MISO (input)
-    TRISFbits.TRISF12 = 0; // RF12-RP108 SCK (output)
-    TRISFbits.TRISF13 = 0; // RF13-RP109 MOSI (output)
+    TRISAbits.TRISA1 = 1; // MISO (input)
+    TRISFbits.TRISF12 = 0; // SCK (output)
+    TRISFbits.TRISF13 = 0; // MOSI (output)
 
     // Remap SPI1 to physical pins on Microbus1 connector
     RPINR20bits.SDI1R = 0b0010001; // Map MISO (SDI1) to RPI17
@@ -51,8 +34,8 @@ void spi_setup(void) {
 
     // Configure SPI1 parameters
     SPI1CON1bits.MSTEN = 1; // Enable master mode
-    SPI1CON1bits.MODE16 = 0; // Use 8-bit mode (not 16-bit)
-    SPI1CON1bits.CKP = 1; // Set clock polarity (idle high)
+    SPI1CON1bits.MODE16 = 0; // Use 8-bit mode
+    SPI1CON1bits.CKP = 1; // Set clock polarity
 
     // Set SPI clock speed: FSCK = (FCY)/(PPR * SPR) = 72MHz/(4*3) = 6MHz
     SPI1CON1bits.PPRE = 0b10; // Primary prescaler 4:1
@@ -67,26 +50,36 @@ void accelerometer_config(void) {
     // Power on the accelerometer (exit suspend mode)
     ACC_CS = 0; // Enable chip select for accelerometer
     spi_write(0x11); // PMU_LPW register (power mode config)
-    spi_write(0x00); // Normal mode 
+    spi_write(0x00); // Set normal mode 
     ACC_CS = 1; // Disable chip select
 
-    // Set data rate and bandwidth (e.g., 10Hz, filtered)
-    ACC_CS = 0; // Enable chip select
+    // Configure bandwidth 
+    ACC_CS = 0;
+    unsigned int address_bandwidth = 0x10; // PMU_BW register (bandwidth and ODR)
+    spi_write(address_bandwidth); 
+    spi_write(0x08); // Set 100Hz ODR, 32Hz bandwidth
+    ACC_CS = 1;
 
-    spi_write(0x10); // PMU_BW register (bandwidth and ODR)
-    spi_write(0x08); // 100Hz ODR, 32Hz bandwidth (0x08)
-    unsigned int adress_measurement_range = 0x0F; // A measurement range
-    spi_write(adress_measurement_range);
-    spi_write(0x05); // ±4g range (1.95 mg/LSB)
+    // Configure measurement range
+    ACC_CS = 0;
+    unsigned int address_measurement_range = 0x0F; 
+    spi_write(address_measurement_range);
+    spi_write(0x05); // Set ±4g range (1.95 mg/LSB)
+    ACC_CS = 1;
 
-    ACC_CS = 1; // Disable chip select
+    // Configure filtering
+    ACC_CS = 0;
+    unsigned int address_filtering = 0x13; 
+    spi_write(address_filtering);
+    spi_write(0b0); // Enable filtering and shadowing
+    ACC_CS = 1;
 }
 
 void acquire_accelerometer_data(void) {
-    // Begin SPI transaction and select accelerometer register for reading
-    ACC_CS = 0; // Enable chip select (assumed for accelerometer)
-    int first_addr = 0x02; // First data register address for accelerometer
-    spi_write(first_addr | 0x80); // Set MSB for read operation (read + auto-increment)
+    ACC_CS = 0; 
+
+    int acc_first_address = 0x02; // First data register address for accelerometer
+    spi_write(acc_first_address | 0x80); // Set MSB for read operation
 
     // Acquire X-axis accelerometer data
     uint8_t x_LSB_byte = spi_write(0x02); // Read X-LSB register
@@ -109,20 +102,9 @@ void acquire_accelerometer_data(void) {
     int z_value = ((z_MSB_byte << 8) | (z_LSB_byte & 0xF8)) >> 3;
     z_values_acc = z_value;
 
-    // End SPI transaction
-    ACC_CS = 1; // Disable chip select
+    ACC_CS = 1; 
 }
 
-/**
- * @brief Calculates the average of an array of integer values
- * 
- * Computes arithmetic mean of the values in the given array.
- * Used for smoothing sensor data by averaging recent readings.
- * 
- * @param values Array of integer values to average
- * @param size Number of elements in the array
- * @return integer of the arithmetic mean of the values
- */
 int filter_accelerometer(int values, char axis) {
     int bias = 0;
     // Set the accelerometer offset for each axis when "wait for start" state
@@ -136,14 +118,6 @@ int filter_accelerometer(int values, char axis) {
         default: bias = 0;
             break;
     }
-
-    // // Calculate sum of all values in array
-    // int sum = 0;
-    // for (int i = 0; i < size; i++) {
-    //     sum += values[i];
-    // }
-    // double raw_average = (double) sum / size;
-
     // Convert raw average to acceleration in [mg]
     int acc_in_mg = (int) round(0.977 * values);
 

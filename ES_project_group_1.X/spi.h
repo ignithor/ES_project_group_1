@@ -33,15 +33,11 @@ void accelerometer_config(void);
 void acquire_accelerometer_data(void);
 
 /**
- * @brief Calculate the average of an array of integer values.
- * 
- * Computes the average of the provided measurements.
- * 
- * @param values The array of integer values.
- * @param size The number of elements in the array.
- * @return double The computed average.
+ * @brief Change unit and remove the offset of the accelerometer values.
+ *  
+ * @param values The integer of the accelerometer values.
+ * @return int The filtered value.
  */
-// double calculate_average(int values[], int size);
 int filter_accelerometer(int values, char axis);
 
 #endif // SPI_H
