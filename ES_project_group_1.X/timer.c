@@ -1,32 +1,26 @@
-/*
- * File:   timer.c
- * Author: Team 1
- *
- * Created on March 3, 2025, 9:32 AM
- * 
- * Description:
- * This file implements timer management functionality for the application.
- * It handles configuring and using multiple timer peripherals for different timing requirements:
- * - TIMER1: Controls the main loop execution rate at 100Hz
- * - TIMER2: Used for precise busy wait delays (e.g., 7ms algorithm simulation)
- */
+/* ===============================================================
+ * File:   main.c                                                =
+ * Author: group 1                                               =   
+ * Paul Pham Dang                                                =   
+ * Waleed Elfieky                                                =
+ * Yui Momiyama                                                  =
+ * Mamoru Ota                                                    =
+ * TIMER1: Controls the main loop execution rate at 500 Hz       =
+ * TIMER2: Used to process bouncing in interrupt routine for     =
+ * pressed button                                                =
+ * ===============================================================*/
 
-#include "xc.h"
+/*================================================================*/
 #include "timer.h"
+/*================================================================*/
 
-/**
- * @brief Configure a timer for a specified period
- * 
- * Sets up the selected timer with appropriate prescaler and period register
- * values to generate timing events at the specified millisecond interval.
- * 
- * @param timer Timer identifier (TIMER1, TIMER2)
- * @param ms Desired period in milliseconds
- */
+/*================================================================*/
+//setup timer configuration and ticks
+/*================================================================*/
 void tmr_setup_period(int timer, int ms) {
     switch (timer) {
         case TIMER1:
-            // TIMER1: Manage main loop period at 100Hz
+            // TIMER1: Manage main loop period at 500Hz
             T1CONbits.TON = 0; // Disable Timer1 during configuration
             TMR1 = 0; // Reset Timer1 counter register
             T1CONbits.TCKPS = 3; // Set prescaler to 1:256
@@ -36,7 +30,7 @@ void tmr_setup_period(int timer, int ms) {
             break;
 
         case TIMER2:
-            // TIMER2: Used for precise delays (e.g., 7ms algorithm simulation)
+            // TIMER2: Used to process bouncing in interrupt routine for pressed button
             T2CONbits.TON = 0; // Disable Timer2 during configuration
             TMR2 = 0; // Reset Timer2 counter register
             T2CONbits.TCKPS = 3; // Set prescaler to 1:256
@@ -49,15 +43,11 @@ void tmr_setup_period(int timer, int ms) {
             break;
     }
 }
+/*================================================================*/
 
-/**
- * @brief Wait for a timer period to complete
- * 
- * Blocks execution until the specified timer's period has elapsed (flag set)
- * then clears the flag for the next period.
- * 
- * @param timer Timer identifier (TIMER1 or TIMER2)
- */
+/*================================================================*/
+//busy wait timer
+/*================================================================*/
 void tmr_wait_period(int timer) {
     switch (timer) {
         case TIMER1:
@@ -77,30 +67,4 @@ void tmr_wait_period(int timer) {
             break;
     }
 }
-
-/**
- * @brief Perform a busy wait for specified milliseconds
- * 
- * Configures and uses the specified timer to create a precise
- * delay for the given number of milliseconds.
- * 
- * @param timer Timer identifier (typically TIMER2)
- * @param ms Delay duration in milliseconds
- */
-void tmr_wait_ms(int timer, int ms) {
-    // Configure timer for the specified period
-    tmr_setup_period(timer, ms);
-
-    // Block until the timer period completes
-    tmr_wait_period(timer);
-
-    // Stop the timer if it was TIMER2 (for one-shot delays)
-    switch (timer) {
-        case TIMER2:
-            T2CONbits.TON = 0; // Disable Timer2 after use
-            break;
-        default:
-            // Other timers remain running for continuous operation
-            break;
-    }
-}
+/*================================================================*/
