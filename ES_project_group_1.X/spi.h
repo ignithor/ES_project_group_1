@@ -13,31 +13,33 @@ extern int x_values_acc;
 extern int y_values_acc;
 extern int z_values_acc;
 
-/**
- * @brief Initialize the SPI peripheral.
- * 
- * Configures SPI1 including pin remapping and clock settings for communication with sensors.
- */
+// Initializes the SPI peripheral.
+// Sets up necessary SPI registers and pin configuration.
 void spi_setup(void);
 
-/**
- * @brief Transmit and receive a byte over SPI.
- * 
- * Sends the specified address/command and returns the received data.
- * 
- * @param addr The address/command byte to be sent.
- * @return int The byte received via SPI.
- */
+// Sends a byte via SPI and returns the received byte.
+// Parameters:
+//   addr - the byte to transmit
+// Returns:
+//   the byte received from the SPI slave device
 int spi_write(int addr);
+
+// Configures the BMX055 accelerometer.
+// Sets power mode to normal, bandwidth to 100Hz/32Hz,
+// measurement range to ±4g, and enables filtering.
 void accelerometer_config(void);
+
+// Reads raw accelerometer data from the BMX055 via SPI.
+// Acquires and processes X, Y, and Z axis data into global variables.
+// Converts 13-bit values by discarding the lowest 3 bits.
 void acquire_accelerometer_data(void);
 
-/**
- * @brief Change unit and remove the offset of the accelerometer values.
- *  
- * @param values The integer of the accelerometer values.
- * @return int The filtered value.
- */
+// Applies axis-specific offset correction and scaling to accelerometer values.
+// Parameters:
+//   values - raw accelerometer reading to filter
+//   axis   - axis label ('x', 'y', or 'z')
+// Returns:
+//   Bias-corrected and scaled acceleration value in mg
 int filter_accelerometer(int values, char axis);
 
 #endif // SPI_H
